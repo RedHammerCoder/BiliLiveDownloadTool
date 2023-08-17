@@ -2,10 +2,14 @@ import requests
 import re
 import time
 import threading
+import signal as sig
 
 from bili_get_stream import get_real_url
-
 urls = []   # 全局变量
+figflag ={'CTRLC':0}
+
+def CtrC(sig , frame):
+	figflag['CTRLC']=1
 
 # 在新线程中刷新m3u8
 def flush_m3u8(line):
@@ -64,7 +68,6 @@ def download(room):
 	ext_url = pre_url+ext_x_map+token
 	r = requests.get(ext_url)
 	head = r.content   # 获取文件头
-	
 	# 启动刷新m3u8线程
 	t = threading.Thread(target=flush_m3u8, args=(line,))
 	t.start()
@@ -73,6 +76,9 @@ def download(room):
 	with open(f'tmp/{time.strftime("%Y%m%d_%H_%M_%S", time.localtime())}.m4s', 'wb') as f:
 		f.write(head)
 		while True:
+			if(figflag['CTRLC']==1):
+				print("have ctrl c")
+				break
 			if len(urls) != 0:
 				fname = urls.pop(0)  # pop取出第一个元素fname
 				url = pre_url + fname + token
@@ -89,7 +95,8 @@ def download(room):
 	print('over')
 
 if __name__ == '__main__':
-	download(21728563)
+	sig.signal(sig.SIGINT ,CtrC)
+	download(904823)
 
 
 

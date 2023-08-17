@@ -26,6 +26,7 @@ class BiliBili:
         }
         with requests.Session() as self.s:
             res = self.s.get(r_url, headers=self.header, params=param).json()
+            print(res)
         if res['msg'] == '直播间不存在':
             raise Exception(f'bilibili {rid} {res["msg"]}')
         live_status = res['data']['live_status']
@@ -50,6 +51,8 @@ class BiliBili:
 
         for data in stream_info:
             accept_qn = data['format'][0]['codec'][0]['accept_qn']
+            print("data is ",data)
+            print("\naccept_qn is ",accept_qn)
             for qn in accept_qn:
                 qn_max = qn if qn > qn_max else qn_max
         if qn_max != current_qn:
