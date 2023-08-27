@@ -42,12 +42,16 @@ class BiliBili:
             'format': '0,1,2',
             'codec': '0,1',
             'qn': current_qn,
-            'platform': 'h5',  # 这里h5->hls    web->http-flv    经过测试好像web不太能用
+            'platform': 'web',  # 这里h5->hls    web->http-flv    经过测试好像web不太能用
             'ptype': 8,
         }
-        res = self.s.get(url, headers=self.header, params=param).json()
+        res = self.s.get(url, headers=self.header, params=param)
+        print(res)
+        res=res.json()
         stream_info = res['data']['playurl_info']['playurl']['stream']
         qn_max = 0
+        print("play stream_info :")
+        print(stream_info)
 
         for data in stream_info:
             accept_qn = data['format'][0]['codec'][0]['accept_qn']

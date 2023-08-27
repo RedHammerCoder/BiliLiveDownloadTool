@@ -1,3 +1,4 @@
 __pycache__/*
 tmp/*
 !tmp/.gitkeep
+BiliLive2AV1/build/*

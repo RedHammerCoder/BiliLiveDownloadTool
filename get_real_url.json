@@ -1,0 +1,180 @@
+{
+    "code": 0,
+    "msg": "ok",
+    "message": "ok",
+    "data": {
+        "room_id": 904823,
+        "short_id": 0,
+        "uid": 11332884,
+        "need_p2p": 0,
+        "is_hidden": False,
+        "is_locked": False,
+        "is_portrait": False,
+        "live_status": 1,
+        "hidden_till": 0,
+        "lock_till": 0,
+        "encrypted": False,
+        "pwd_verified": False,
+        "live_time": 1692540468,
+        "room_shield": 1,
+        "is_sp": 0,
+        "special_type": 0
+    }
+}
+
+{
+    "protocol_name": "http_stream",
+    "format": [
+        {
+            "format_name": "flv",
+            "codec": [
+                {
+                    "codec_name": "avc",
+                    "current_qn": 10000,
+                    "accept_qn": [
+                        10000,
+                        400,
+                        250,
+                        150
+                    ],
+                    "base_url": "/live-bvc/946334/live_11332884_9386100_bluray.flv?",
+                    "url_info": [
+                        {
+                            "host": "https://d0--cn-gotcha01.bilivideo.com",
+                            "extra": "expires=1692553701&pt=h5&deadline=1692553701&len=0&oi=979675362&platform=h5&qn=10000&trid=10009d2eeb4c4d294be781c436bed8a62eb6&uipk=100&uipv=100&nbs=1&uparams=cdn,deadline,len,oi,platform,qn,trid,uipk,uipv,nbs&cdn=cn-gotcha01&upsig=db6fcbcffdc957991810fb4568afa3ef&sk=1304f646dfeb4df8b6e7ff33c167d3ad491555cae985818bb2a5ec341f048d3d&p2p_type=0&sl=3&free_type=0&mid=0&sche=ban&bmt=1&score=11&pp=rtmp&source=onetier&trace=404&site=efe24b62fac4d4b35911a88da267ab77&order=1",
+                            "stream_ttl": 3600
+                        }
+                    ],
+                    "hdr_qn": None,
+                    "dolby_type": 0,
+                    "attr_name": ""
+                },
+                {
+                    "codec_name": "hevc",
+                    "current_qn": 10000,
+                    "accept_qn": [
+                        10000,
+                        400,
+                        250
+                    ],
+                    "base_url": "/live-bvc/946334/live_11332884_9386100_prohevc.flv?",
+                    "url_info": [
+                        {
+                            "host": "https://d0--cn-gotcha01.bilivideo.com",
+                            "extra": "expires=1692553701&pt=h5&deadline=1692553701&len=0&oi=979675362&platform=h5&qn=10000&trid=10009d2eeb4c4d294be781c436bed8a62eb6&uipk=100&uipv=100&nbs=1&uparams=cdn,deadline,len,oi,platform,qn,trid,uipk,uipv,nbs&cdn=cn-gotcha01&upsig=08eb641696f66c62c4d68774a03613df&sk=1304f646dfeb4df8b6e7ff33c167d3ad491555cae985818bb2a5ec341f048d3d&p2p_type=0&sl=3&free_type=0&mid=0&sche=ban&bmt=1&score=11&pp=rtmp&source=onetier&trace=404&site=efe24b62fac4d4b35911a88da267ab77&order=1",
+                            "stream_ttl": 3600
+                        }
+                    ],
+                    "hdr_qn": None,
+                    "dolby_type": 0,
+                    "attr_name": ""
+                }
+            ]
+        }
+    ]
+}
+
+
+//https://c1--cn-gotcha208.bilivideo.com/live-bvc/252470/live_152065343_49744574/
+{
+    "protocol_name": "http_hls",
+    "format": [
+        {
+            "format_name": "ts",
+            "codec": [
+                {
+                    "codec_name": "avc",
+                    "current_qn": 10000,
+                    "accept_qn": [
+                        10000,
+                        400,
+                        250,
+                        150
+                    ],
+                    "base_url": "/live-bvc/946334/live_11332884_9386100_bluray.m3u8?",
+                    "url_info": [
+                        {
+                            "host": "https://d1--cn-gotcha101.bilivideo.com",
+                            "extra": "expires=1692553701&len=0&oi=979675362&pt=h5&qn=10000&trid=10039d2eeb4c4d294be781c436bed8a62eb6&sigparams=cdn,expires,len,oi,pt,qn,trid&cdn=cn-gotcha01&sign=1e36071bb775ecf4d0f136dacab384f3&sk=1304f646dfeb4df8b6e7ff33c167d3ad491555cae985818bb2a5ec341f048d3d&p2p_type=0&sl=3&free_type=0&mid=0&pp=rtmp&source=onetier&trace=4&site=efe24b62fac4d4b35911a88da267ab77&order=1",
+                            "stream_ttl": 3600
+                        }
+                    ],
+                    "hdr_qn": None,
+                    "dolby_type": 0,
+                    "attr_name": ""
+                }
+            ]
+        },
+        {
+            "format_name": "fmp4",
+            "codec": [
+                {
+                    "codec_name": "avc",
+                    "current_qn": 10000,
+                    "accept_qn": [
+                        10000,
+                        400,
+                        250,
+                        150
+                    ],
+                    "base_url": "/live-bvc/946334/live_11332884_9386100_bluray/index.m3u8?",
+                    "url_info": [
+                        {
+                            "host": "https://d1--cn-gotcha208.bilivideo.com",
+                            "extra": "expires=1692553701&len=0&oi=979675362&pt=h5&qn=10000&trid=10079d2eeb4c4d294be781c436bed8a62eb6&sigparams=cdn,expires,len,oi,pt,qn,trid&cdn=cn-gotcha208&sign=c4a3eaeb905a29b7e2b7c7e9dc53a2b6&sk=657866af8fc16d8b2b84dfdde3e9814376eb4640b48f5932d44509b3af9da4a2&p2p_type=0&sl=3&free_type=0&mid=0&pp=rtmp&source=onetier&trace=4&site=efe24b62fac4d4b35911a88da267ab77&order=1",
+                            "stream_ttl": 3600
+                        }
+                    ],
+                    "hdr_qn": None,
+                    "dolby_type": 0,
+                    "attr_name": ""
+                },
+                {
+                    "codec_name": "hevc",
+                    "current_qn": 10000,
+                    "accept_qn": [
+                        10000,
+                        400,
+                        250
+                    ],
+                    "base_url": "/live-bvc/946334/live_11332884_9386100_prohevc/index.m3u8?",
+                    "url_info": [
+                        {
+                            "host": "https://d1--cn-gotcha208.bilivideo.com",
+                            "extra": "expires=1692553701&len=0&oi=979675362&pt=h5&qn=10000&trid=10079d2eeb4c4d294be781c436bed8a62eb6&sigparams=cdn,expires,len,oi,pt,qn,trid&cdn=cn-gotcha208&sign=8f945e8cc21dffa8419739ecf2fef4e0&sk=657866af8fc16d8b2b84dfdde3e9814376eb4640b48f5932d44509b3af9da4a2&p2p_type=0&sl=3&free_type=0&mid=0&pp=rtmp&source=onetier&trace=4&site=efe24b62fac4d4b35911a88da267ab77&order=1",
+                            "stream_ttl": 3600
+                        }
+                    ],
+                    "hdr_qn": None,
+                    "dolby_type": 0,
+                    "attr_name": ""
+                }
+            ]
+        }
+    ]
+}
+
+//没有开播的记录
+{
+    "code": 0,
+    "msg": "ok",
+    "message": "ok",
+    "data": {
+        "room_id": 904823,
+        "short_id": 0,
+        "uid": 11332884,
+        "need_p2p": 0,
+        "is_hidden": false,
+        "is_locked": false,
+        "is_portrait": false,
+        "live_status": 0,
+        "hidden_till": 0,
+        "lock_till": 0,
+        "encrypted": false,
+        "pwd_verified": false,
+        "live_time": -62170012800,
+        "room_shield": 1,
+        "is_sp": 0,
+        "special_type": 0
+    }
+}
