@@ -42,7 +42,7 @@ class BiliBili:
             'format': '0,1,2',
             'codec': '0,1',
             'qn': current_qn,
-            'platform': 'web',  # 这里h5->hls    web->http-flv    经过测试好像web不太能用
+            'platform': 'h5',  # 这里h5->hls    web->http-flv    经过测试好像web不太能用
             'ptype': 8,
         }
         res = self.s.get(url, headers=self.header, params=param)

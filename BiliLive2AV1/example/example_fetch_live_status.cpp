@@ -2,7 +2,7 @@
 
 int main()
 {
-    auto status = GetliveStatus("23486162");
+    GetliveStatus("23486162");
 
     return 0;
 }

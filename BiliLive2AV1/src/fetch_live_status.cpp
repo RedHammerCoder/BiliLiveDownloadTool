@@ -1,11 +1,13 @@
 #include "fetch_live_status.h"
 #include <string.h>
 #include <iostream>
+#include <unistd.h>
+#include <sys/mman.h>
 using namespace rapidjson;
-
+std::deque<LiveHomeStatus> liveroom_list;
 const std::string web_live_status("https://api.live.bilibili.com/room/v1/Room/room_init");
 
-
+std::vector<M4SVideo> m4slist;
 void fetch_live_status_callback(WFHttpTask *task)
 {
     protocol::HttpRequest *req = task->get_req();
@@ -36,7 +38,6 @@ void fetch_live_status_callback(WFHttpTask *task)
         fprintf(stderr, "Failed. Press Ctrl-C to exit.\n");
         return;
     }
-
     size_t body_len = 0;
     const void *body = nullptr;
     std::string name;
@@ -73,23 +74,43 @@ void fetch_live_status_callback(WFHttpTask *task)
     }
     assert(StatusJson["msg"].IsString());
     const char *msg(StatusJson["msg"].GetString());
+    fprintf(stderr , "Msg Status is  %s",msg);
     if (strncmp(msg, "ok", 2) != 0)
     {
         fprintf(stderr, "Live Room Status Error , Msg not OK");
         return;
     }
     assert(StatusJson["data"].IsObject());
-    auto DataObj = StatusJson["data"].GetObject();                                                                        
+    auto DataObj = StatusJson["data"].GetObject();
+    uint64_t RoomId= DataObj["room_id"].GetUint64();
+    int64_t Live_time = DataObj["live_time"].GetInt64();
+    int LiveStatus =  DataObj["live_status"].GetInt();
+    bool is_locked = DataObj["is_locked"].GetBool();
+    if(is_locked==true)return;
+    for(auto & i : liveroom_list)
+    {
+        if(i.RoomId==RoomId)
+        {
+            i.live_time=Live_time;
+            i.live_status=LiveStatus;
+        }
+        return;
+    }
+
 }
 
 static WFFacilities::WaitGroup wait_group(1);
 
-LiveHomeStatus GetliveStatus(const char *Liveaddr)
+void Listening_liveroom_init()
 {
-    LiveHomeStatus Status;
-    memset(&Status, 0, sizeof(LiveHomeStatus));
-    char JsonBuff[256];
-    memset(JsonBuff, 0, 256);
+    // auto dir = opendir("~/BLD");
+    auto file = fopen("~/.BiliLiveDownload.json","r");
+
+}
+
+void GetliveStatus(const char *Liveaddr)
+{
+   
     std::string website = web_live_status + "?id=" + Liveaddr;
     std::cout<<"website add is "<<website<<std::endl;
 
@@ -99,6 +120,23 @@ LiveHomeStatus GetliveStatus(const char *Liveaddr)
     req->add_header_pair("User-Agent", "Mozilla/5.0");
     req->add_header_pair("Connection", "close");
     task->start();
-    wait_group.wait();
-    return Status;
+    return ;
+}
+
+const std::string RoomUrlInfo = "https://api.live.bilibili.com/xlive/web-room/v2/index/getRoomPlayInfo";
+
+void LivingRoomIndexAnalysis()
+{
+    for(auto & i : liveroom_list)
+    {
+        if(i.live_status==true)
+        {
+            if(i.LivingRoomExt==nullptr)
+            {
+                i.LivingRoomExt=new LivingRoomIndex();
+            }
+
+        }
+    }
+
 }
