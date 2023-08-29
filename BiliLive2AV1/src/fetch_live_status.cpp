@@ -3,9 +3,15 @@
 #include <iostream>
 #include <unistd.h>
 #include <sys/mman.h>
+
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <unistd.h>
 using namespace rapidjson;
 std::deque<LiveHomeStatus> liveroom_list;
 const std::string web_live_status("https://api.live.bilibili.com/room/v1/Room/room_init");
+char * HOME = getenv("HOME");
+std::string default_profile_json =  std::string(HOME)+"/.BiliLiveDown.json";
 
 std::vector<M4SVideo> m4slist;
 void fetch_live_status_callback(WFHttpTask *task)
@@ -53,7 +59,7 @@ void fetch_live_status_callback(WFHttpTask *task)
     fprintf(stderr, "entry to req_resp\r\n");
     size_t Uri_len = strlen(uri);
     resp->get_parsed_body(&body, &body_len);
-    fprintf(stderr, "@@ body size is %d\r\n", body_len);
+    fprintf(stderr, "@@ body size is %ld\r\n", body_len);
     fwrite(body, 1, body_len, stderr);
     fflush(stderr);
     fprintf(stderr, "http req web URI  %s   %d \r\n", uri, Uri_len);
@@ -103,7 +109,42 @@ static WFFacilities::WaitGroup wait_group(1);
 void Listening_liveroom_init()
 {
     // auto dir = opendir("~/BLD");
-    auto file = fopen("~/.BiliLiveDownload.json", "r");
+    fprintf(stderr, default_profile_json.c_str());
+    auto file = fopen(default_profile_json.c_str(), "r");
+    if(file==NULL)
+    {
+        fprintf(stderr , "read profile error\r\n");
+        exit(-1);
+        return;
+
+    }
+    struct stat file_stat;
+    memset(&file_stat , 0 , sizeof(  file_stat));
+    int _fd = fileno(file);
+    if(_fd==-1){
+        fprintf(stderr,"Open profile Error");
+        exit(-1);
+    }
+    fstat(_fd,&file_stat);
+    size_t Fsiz =  (size_t)file_stat.st_size;
+    fprintf(stderr , "profile size is %ld\n\r",Fsiz);
+
+    void* block = malloc(Fsiz);
+    int readtimes = 10;
+    while(Fsiz!=0 and  readtimes>0)
+    {
+        readtimes--;
+        size_t FullReadSiz =  fread(block,Fsiz,1,file);
+        fflush(file);
+        
+        fprintf(stderr," readfile and read size is %ld\r\n",FullReadSiz);
+        if(FullReadSiz==1)break;
+        Fsiz-=FullReadSiz;
+    }
+    fprintf(stderr,"LivingRoomMessage Readed to  Mem\r\n");
+    fprintf(stderr,(char*)block);
+    
+     
 }
 
 void GetliveStatus(const char *Liveaddr)
@@ -124,7 +165,7 @@ void GetliveStatus(const char *Liveaddr)
 
 const std::string RoomUrlInfo = "https://api.live.bilibili.com/xlive/web-room/v2/index/getRoomPlayInfo";
 
-void live_room_website_call_back(WFHttpTask *task);
+// void live_room_website_call_back(WFHttpTask *task);
 
 void LivingRoomIndexAnalysis()
 {
