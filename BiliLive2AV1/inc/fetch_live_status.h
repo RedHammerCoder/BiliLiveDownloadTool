@@ -55,7 +55,7 @@ class LivingRoomIndex;
 struct LiveHomeStatus
 {
     uint64_t live_time;
-    char RoomId_chr [32];
+    char RoomId_chr [32]={0};
     std::string RoomHostName;//used to fill host name  ; like "key725" "战鹰"，，parsed by json file
     uint64_t RoomId;
     bool Hidden;
@@ -129,4 +129,5 @@ extern std::deque<LiveHomeStatus> liveroom_list;
  */
 void LivingRoomIndexAnalysis();
 void Listening_liveroom_init();
+void UpdateRoomListMsg();
 #endif

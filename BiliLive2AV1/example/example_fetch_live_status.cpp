@@ -3,7 +3,8 @@
 int main()
 {
     Listening_liveroom_init();
-    GetliveStatus("4089850");
+    // GetliveStatus("4089850");
+    UpdateRoomListMsg();
 
     return 0;
 }
