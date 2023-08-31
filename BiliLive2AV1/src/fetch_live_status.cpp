@@ -3,10 +3,11 @@
 #include <iostream>
 #include <unistd.h>
 #include <sys/mman.h>
-
+#include <string_view>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
+#include <sstream>
 using namespace rapidjson;
 std::deque<LiveHomeStatus> liveroom_list;
 const std::string web_live_status("https://api.live.bilibili.com/room/v1/Room/room_init");
@@ -14,6 +15,40 @@ char *HOME = getenv("HOME");
 std::string default_profile_json = std::string(HOME) + "/.BiliLiveDown.json";
 
 std::vector<M4SVideo> m4slist;
+
+size_t
+MergeChunkedBody
+(const void* _body,size_t _body_len , void ** dest_mem_s, size_t dest_ptr,size_t dest_bound)
+{
+    size_t MemSize=256;
+    void * dest_mem = *dest_mem_s;
+    const char * body_chr=(const char*)_body;
+        // AllocFlag = realloc(dest,MemSize);
+        int ptr=0;
+        int ptr_base=0;
+        do{
+            char c=body_chr[ptr];
+            if(c=='\n'){ptr++; break;}
+            ptr++;
+
+        }while (ptr<_body_len);
+        std::string sv(body_chr+ptr_base,ptr-1);
+
+        std::stringstream ss;
+        std::cout<<std::oct<<"0x13e0"<<std::endl;
+
+        int length ;
+        ss>>length;
+        std::cout<<"\n  ############### Hex Trans to int  ###############\n"<<sv<<"  and number is  "<<length<<std::endl;
+
+        return length;
+
+}
+
+
+
+
+
 void fetch_live_status_callback(WFHttpTask *task)
 {
     protocol::HttpRequest *req = task->get_req();
@@ -372,6 +407,9 @@ void LivingRoomIndexAnalysis()
         size_t body_len;
         resp->get_raw_body(&rawbody,&rawbody_len);
         bool flg= resp->get_parsed_body( &body,&body_len);
+        void * membody=nullptr;
+        size_t membodysiz=0;
+        MergeChunkedBody(body,body_len,&membody,0,0);
         fprintf(stderr,"\nmessage length is %ld\r\n",body_len);
         fprintf(stderr,"\nmessage STRLEN is %ld\r\n",strlen((const char*)body));
 
@@ -380,16 +418,6 @@ void LivingRoomIndexAnalysis()
         fwrite(rawbody, 1, rawbody_len, rawbodyft);
         fclose(rawbodyft);
         if(flg==false)return;
-        fprintf(stderr,"\nLoop Print http element\n");
-        std::string name;
-	std::string value;
-        protocol::HttpHeaderCursor resp_cursor(resp);
-
-	while (resp_cursor.next(name, value))
-		{
-            fprintf(stderr, "%s: %s\r\n", name.c_str(), value.c_str());
-            fprintf(stderr, "\r\n");
-        }
         auto FT  =fopen("fetch_file.txt","w+");
         fprintf(FT,(const char *)body);
         fclose(FT);
@@ -415,9 +443,11 @@ void LivingRoomIndexAnalysis()
 // Accept-Encoding:
 // gzip, deflate, br
             //Content-Encoding:gzip
-            // req->add_header_pair("Accept-Encoding","gzip");
-            // req->add_header_pair("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.0.0 Safari/537.36 Edg/116.0.1938.62");
-            // req->add_header_pair("Connection", "close");
+            req->add_header_pair("Sec-Fetch-Mode","Sec-Fetch-Mode");
+            //Sec-Fetch-Mode:
+// navigate
+            req->add_header_pair("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.0.0 Safari/537.36 Edg/116.0.1938.62");
+            req->add_header_pair("Connection", "close");
             Task->start();
         }
     }
