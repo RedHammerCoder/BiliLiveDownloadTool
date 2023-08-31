@@ -73,7 +73,7 @@ def download(room):
 	t.start()
 
 	# 直接合并写入
-	with open(f'tmp/{time.strftime("%Y%m%d_%H_%M_%S", time.localtime())}.m4s', 'wb') as f:
+	with open(f'tmp/abcd.m4s', 'wb') as f:
 		f.write(head)
 		while True:
 			if(figflag['CTRLC']==1):
@@ -96,7 +96,6 @@ def download(room):
 
 if __name__ == '__main__':
 	sig.signal(sig.SIGINT ,CtrC)
-	download(2280628)
-
+	download(24338260)
 
 

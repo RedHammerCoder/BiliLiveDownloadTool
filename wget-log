@@ -1,0 +1,11 @@
+--2023-08-31 15:02:45--  https://api.live.bilibili.com/xlive/web-room/v2/index/getRoomPlayInfo?room_id=528
+Resolving api.live.bilibili.com (api.live.bilibili.com)... 113.215.235.1, 113.215.235.1
+Connecting to api.live.bilibili.com (api.live.bilibili.com)|113.215.235.1|:443... connected.
+HTTP request sent, awaiting response... 200 OK
+Length: 364 [application/json]
+Saving to: ‘getRoomPlayInfo?room_id=528’
+
+getRoomPlayInfo?room_id=528                               0%[                                                                                                                               ]       0  --.-KB/s               getRoomPlayInfo?room_id=528                             100%[==============================================================================================================================>]     364  --.-KB/s    in 0s      
+
+2023-08-31 15:02:45 (274 MB/s) - ‘getRoomPlayInfo?room_id=528’ saved [364/364]
+

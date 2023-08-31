@@ -272,14 +272,20 @@ void UpdateRoomListMsg()
             assert(StatusJson["data"].IsObject());
             auto DataObj = StatusJson["data"].GetObject();
             uint64_t RoomId = DataObj["room_id"].GetUint64();
+            int short_id = DataObj["short_id"].GetInt();
             int64_t Live_time = DataObj["live_time"].GetInt64();
             int LiveStatus = DataObj["live_status"].GetInt();
             bool is_locked = DataObj["is_locked"].GetBool();
             if (is_locked == true)
                 return;
-
-            assert(RoomMsg.RoomId==RoomId);
-            RoomMsg.live_status=LiveStatus;
+            if (short_id != 0)
+                RoomId = short_id;
+            assert(RoomMsg.RoomId == RoomId);
+            RoomMsg.live_status = LiveStatus;
+            if (LiveStatus == 1)
+            {
+                fprintf(stderr, "Current Room %c is Running\r\n", RoomMsg.RoomId_chr);
+            }
             // for (auto &i : liveroom_list)
             // {
             //     if (i.RoomId == RoomId)
@@ -311,9 +317,10 @@ const std::string RoomUrlInfo = "https://api.live.bilibili.com/xlive/web-room/v2
 
 void LivingRoomIndexAnalysis()
 {
+    fprintf(stderr, "\r\nEntry to Room ANA\r\n");
     for (auto &i : liveroom_list)
     {
-        if (i.live_status == true)
+        if (i.live_status == 1)
         {
             if (i.LivingRoomExt == nullptr)
             {
@@ -325,8 +332,9 @@ void LivingRoomIndexAnalysis()
             memset(buff, 0, 50);
             sprintf(buff, "?room_id=%lld&protocol=0,1&format=0,1,2&codec=0,1&qn=10000&platform=h5&ptype=8", i.RoomId);
             website = RoomUrlInfo + buff;
-            auto Task = WFTaskFactory::create_http_task(website, 5, 2, [=](WFHttpTask *task)
+            auto Task = WFTaskFactory::create_http_task(website, 5, 2, [&](WFHttpTask *task)
                                                         {
+    if(i.live_status==1){fprintf(stderr,"Room %s is Running\r\n");}
     protocol::HttpRequest *req = task->get_req();
     protocol::HttpResponse *resp = task->get_resp();
     int state = task->get_state();
@@ -354,28 +362,64 @@ void LivingRoomIndexAnalysis()
         fprintf(stderr, "Failed. Press Ctrl-C to exit.\n");
         return;
     }
-    uint64_t RoomId = i.RoomId;
-     for(auto &  i : liveroom_list)
-    {
-     if(i.RoomId==RoomId)
-        {
+    // uint64_t RoomId = i.RoomId;
+        
+        // fprintf(stderr,"Match TO CURRET ROOM\r\n");
         auto webref = i.LivingRoomExt;
         const void* body;
+        const void* rawbody;
+        size_t rawbody_len;
         size_t body_len;
-        bool flg= resp->get_parsed_body(&body,&body_len);
+        resp->get_raw_body(&rawbody,&rawbody_len);
+        bool flg= resp->get_parsed_body( &body,&body_len);
+        fprintf(stderr,"\nmessage length is %ld\r\n",body_len);
+        fprintf(stderr,"\nmessage STRLEN is %ld\r\n",strlen((const char*)body));
+
+        auto rawbodyft  =fopen("rawbody.txt","w+");
+        // fprintf(rawbodyft,rawbody);
+        fwrite(rawbody, 1, rawbody_len, rawbodyft);
+        fclose(rawbodyft);
         if(flg==false)return;
+        fprintf(stderr,"\nLoop Print http element\n");
+        std::string name;
+	std::string value;
+        protocol::HttpHeaderCursor resp_cursor(resp);
+
+	while (resp_cursor.next(name, value))
+		{
+            fprintf(stderr, "%s: %s\r\n", name.c_str(), value.c_str());
+            fprintf(stderr, "\r\n");
+        }
+        auto FT  =fopen("fetch_file.txt","w+");
+        fprintf(FT,(const char *)body);
+        fclose(FT);
+        fprintf(stderr,"\n###PRINT BODY \n");
+        // fprintf(stderr,body+5);
+        fwrite(body, 1, body_len, FT );
+        fflush(FT);
+        fflush(rawbodyft);
+
+        fprintf(stderr,"\n###PRINT BODY END\n");
         Document webdesc;
         webdesc.Parse((const char*)body,body_len);
-        fprintf(stderr,(const char*)body);
+        
+        assert(webdesc.IsObject() );
+        // fprintf(stderr,"\r\n web dict is  %d \r\n" ,Web_Dict.GetType());
 
-             return;
-         }
-                                                            } });
+
+        
+        return; });
             auto req = Task->get_req();
-            req->add_header_pair("Accept", "*/*");
-            req->add_header_pair("User-Agent", "Mozilla/5.0");
-            req->add_header_pair("Connection", "close");
+            // req->add_header_pair("Accept", "*/*");
+            //Content-Encoding:gzip
+// Accept-Encoding:
+// gzip, deflate, br
+            //Content-Encoding:gzip
+            // req->add_header_pair("Accept-Encoding","gzip");
+            // req->add_header_pair("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.0.0 Safari/537.36 Edg/116.0.1938.62");
+            // req->add_header_pair("Connection", "close");
             Task->start();
         }
     }
+    sleep(10);
 }

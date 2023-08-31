@@ -1,0 +1,1 @@
+curl -L -X GET 'https://api.live.bilibili.com/xlive/web-room/v2/index/getRoomPlayInfo?room_id=528&protocol=0,1&format=0,1,2&codec=0,1&qn=10000'

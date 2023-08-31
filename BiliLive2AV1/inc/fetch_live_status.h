@@ -60,7 +60,7 @@ struct LiveHomeStatus
     uint64_t RoomId;
     bool Hidden;
     bool Lock;
-    bool live_status;
+    int live_status;
     bool encrypted;
     LivingRoomIndex * LivingRoomExt=nullptr;
 };

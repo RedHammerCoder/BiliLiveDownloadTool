@@ -1,0 +1,24 @@
+/home/yaoyuxin/.BiliLiveDown.jsonprofile size is 167
+ readfile and read size is 1
+LivingRoomMessage Readed to  Mem
+{
+    "liveRoom":[
+        {"roomid":"904823","Introomid":904823},
+        {"roomid":"528","Introomid":528},
+        {"roomid":"23141761","Introomid":23141761}
+    ]
+}##ENTRY to Parser
+##ENTRY to Parser
+##ENTRY to Parser
+Tutoal liveroom conunt is 3
+entry to req_resp
+@@ body size is 310
+{"code":0,"msg":"ok","message":"ok","data":{"room_id":904823,"short_id":0,"uid":11332884,"need_p2p":0,"is_hidden":false,"is_locked":false,"is_portrait":false,"live_status":1,"hidden_till":0,"lock_till":0,"encrypted":false,"pwd_verified":false,"live_time":1693400224,"room_shield":1,"is_sp":0,"special_type":0}}http req web URI  /room/v1/Room/room_init?id=904823   33 
+Msg Status is  okCurrent Room  is Running
+entry to req_resp
+@@ body size is 316
+{"code":0,"msg":"ok","message":"ok","data":{"room_id":23141761,"short_id":0,"uid":2051617240,"need_p2p":0,"is_hidden":false,"is_locked":false,"is_portrait":false,"live_status":0,"hidden_till":0,"lock_till":0,"encrypted":false,"pwd_verified":false,"live_time":-62170012800,"room_shield":0,"is_sp":0,"special_type":0}}http req web URI  /room/v1/Room/room_init?id=23141761   35 
+Msg Status is  okentry to req_resp
+@@ body size is 310
+{"code":0,"msg":"ok","message":"ok","data":{"room_id":5441,"short_id":528,"uid":322892,"need_p2p":0,"is_hidden":false,"is_locked":false,"is_portrait":false,"live_status":2,"hidden_till":0,"lock_till":0,"encrypted":false,"pwd_verified":false,"live_time":-62170012800,"room_shield":1,"is_sp":0,"special_type":0}}http req web URI  /room/v1/Room/room_init?id=528   30 
+Msg Status is  ok
