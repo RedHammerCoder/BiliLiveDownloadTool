@@ -8,6 +8,7 @@
 #include <sys/stat.h>
 #include <unistd.h>
 #include <sstream>
+#include <string.h>
 using namespace rapidjson;
 std::deque<LiveHomeStatus> liveroom_list;
 const std::string web_live_status("https://api.live.bilibili.com/room/v1/Room/room_init");
@@ -17,37 +18,55 @@ std::string default_profile_json = std::string(HOME) + "/.BiliLiveDown.json";
 std::vector<M4SVideo> m4slist;
 
 size_t
-MergeChunkedBody
-(const void* _body,size_t _body_len , void ** dest_mem_s, size_t dest_ptr,size_t dest_bound)
+MergeChunkedBody(void *_body, size_t &_body_len)
 {
-    size_t MemSize=256;
-    void * dest_mem = *dest_mem_s;
-    const char * body_chr=(const char*)_body;
-        // AllocFlag = realloc(dest,MemSize);
-        int ptr=0;
-        int ptr_base=0;
-        do{
-            char c=body_chr[ptr];
-            if(c=='\n'){ptr++; break;}
+    fprintf(stderr, "Entry to MergeChunck");
+    size_t ret_siz = 0;
+    char *body_chr = (char *)_body;
+    // AllocFlag = realloc(dest,MemSize);
+    int length = 0;
+    int TutalLength = 0;
+    auto File = fopen("body.json", "w+");
+    do
+    {
+        length=0;
+
+        int ptr = 0;
+        assert(body_chr[0]!='\n');
+        do
+        {
+            char c = body_chr[ptr];
+            if (c == '\n')
+            {
+                ptr++;
+                break;
+            }
             ptr++;
 
-        }while (ptr<_body_len);
-        std::string sv(body_chr+ptr_base,ptr-1);
+        } while (ptr < _body_len - TutalLength);
+        std::string sv(body_chr, ptr - 2);
+        fprintf(stderr, "\r\n #### Number of length %d  and ptr is %d   ###\r\n", sv.length(),ptr);
+        sscanf(sv.c_str(), "%X", &length);
+        fprintf(stderr, "\r\n #### Length is %d ###\r\n",length);
 
-        std::stringstream ss;
-        std::cout<<std::oct<<"0x13e0"<<std::endl;
+        if (length == 0)
+            break;
+        fprintf(stderr, "\nmove lenth is %d\r\n", length);
+        memmove((void *)body_chr, (const void *)body_chr + ptr, length);
+        fwrite(body_chr, length, 1, File);
+        fflush(File);
 
-        int length ;
-        ss>>length;
-        std::cout<<"\n  ############### Hex Trans to int  ###############\n"<<sv<<"  and number is  "<<length<<std::endl;
+        // assert(body_chr[0] == '{');
+        body_chr += length + ptr+2;
+        // body_chr+=ptr+length;
+        TutalLength += length;
 
-        return length;
+    } while (length != 0);
+    fclose(File);
+    _body_len = TutalLength;
 
+    return _body_len;
 }
-
-
-
-
 
 void fetch_live_status_callback(WFHttpTask *task)
 {
@@ -367,6 +386,13 @@ void LivingRoomIndexAnalysis()
             memset(buff, 0, 50);
             sprintf(buff, "?room_id=%lld&protocol=0,1&format=0,1,2&codec=0,1&qn=10000&platform=h5&ptype=8", i.RoomId);
             website = RoomUrlInfo + buff;
+
+            /**
+             * @brief register callback function
+             * 实现自动更新livingroom数据
+             *
+             */
+
             auto Task = WFTaskFactory::create_http_task(website, 5, 2, [&](WFHttpTask *task)
                                                         {
     if(i.live_status==1){fprintf(stderr,"Room %s is Running\r\n");}
@@ -407,45 +433,62 @@ void LivingRoomIndexAnalysis()
         size_t body_len;
         resp->get_raw_body(&rawbody,&rawbody_len);
         bool flg= resp->get_parsed_body( &body,&body_len);
-        void * membody=nullptr;
-        size_t membodysiz=0;
-        MergeChunkedBody(body,body_len,&membody,0,0);
-        fprintf(stderr,"\nmessage length is %ld\r\n",body_len);
-        fprintf(stderr,"\nmessage STRLEN is %ld\r\n",strlen((const char*)body));
+
 
         auto rawbodyft  =fopen("rawbody.txt","w+");
-        // fprintf(rawbodyft,rawbody);
         fwrite(rawbody, 1, rawbody_len, rawbodyft);
+        fflush(rawbodyft);
         fclose(rawbodyft);
+
+
+
+        std::string name , value;
+        protocol::HttpHeaderCursor resp_cursor(resp);
+        bool ThunckFlag=false;
+        while (resp_cursor.next(name, value))
+        {
+            if(strncmp("Transfer-Encoding" , name.c_str() , strlen("Transfer-Encoding"))==0
+            && strncmp("chunked",value.c_str(),strlen("chunked"))==0)
+            {
+                ThunckFlag=true;
+            }
+        }
+        fprintf(stderr, "\r\n");
+        int ThunckLen=0;
+        if(ThunckFlag==true)
+        {
+            ThunckFlag= MergeChunkedBody((void*)body , body_len);
+        }
+
+        void * membody=nullptr;
+        size_t membodysiz=0;
+
+       
         if(flg==false)return;
         auto FT  =fopen("fetch_file.txt","w+");
-        fprintf(FT,(const char *)body);
-        fclose(FT);
-        fprintf(stderr,"\n###PRINT BODY \n");
-        // fprintf(stderr,body+5);
-        fwrite(body, 1, body_len, FT );
+                // fprintf(stderr,body+5);
+        fwrite(body, body_len, 1, FT );
         fflush(FT);
-        fflush(rawbodyft);
+        fclose(FT);
 
-        fprintf(stderr,"\n###PRINT BODY END\n");
+        fprintf(stderr,"\n###PRINT BODY END  body len is %lld\n",body_len);
         Document webdesc;
         webdesc.Parse((const char*)body,body_len);
+        // fprintf(stderr,"\n###PARSER DONE  \r\n  ");
         
         assert(webdesc.IsObject() );
+        // fprintf(stderr , "\nWebDesc is OBJ\n");
         // fprintf(stderr,"\r\n web dict is  %d \r\n" ,Web_Dict.GetType());
-
-
-        
         return; });
             auto req = Task->get_req();
             // req->add_header_pair("Accept", "*/*");
-            //Content-Encoding:gzip
-// Accept-Encoding:
-// gzip, deflate, br
-            //Content-Encoding:gzip
-            req->add_header_pair("Sec-Fetch-Mode","Sec-Fetch-Mode");
-            //Sec-Fetch-Mode:
-// navigate
+            // Content-Encoding:gzip
+            // Accept-Encoding:
+            // gzip, deflate, br
+            // Content-Encoding:gzip
+            req->add_header_pair("Sec-Fetch-Mode", "Sec-Fetch-Mode");
+            // Sec-Fetch-Mode:
+            // navigate
             req->add_header_pair("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.0.0 Safari/537.36 Edg/116.0.1938.62");
             req->add_header_pair("Connection", "close");
             Task->start();
