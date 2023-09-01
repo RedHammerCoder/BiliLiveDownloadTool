@@ -52,12 +52,12 @@ MergeChunkedBody(void *_body, size_t &_body_len)
         if (length == 0)
             break;
         fprintf(stderr, "\nmove lenth is %d\r\n", length);
-        memmove((void *)body_chr, (const void *)body_chr + ptr, length);
+        memmove((void *)((char*)_body+TutalLength), (const void *)body_chr + ptr, length);
         fwrite(body_chr, length, 1, File);
         fflush(File);
 
         // assert(body_chr[0] == '{');
-        body_chr += length + ptr+2;
+        body_chr += (length + ptr+2);
         // body_chr+=ptr+length;
         TutalLength += length;
 
@@ -229,6 +229,7 @@ void Listening_liveroom_init()
     }
     fprintf(stderr, "Tutoal liveroom conunt is %d\r\n", liveroom_list.size());
     // fprintf(stderr,"End Of Get Live Room \r\n");
+    free(block);
 }
 
 void GetliveStatus(const char *Liveaddr)
@@ -381,9 +382,9 @@ void LivingRoomIndexAnalysis()
                 i.LivingRoomExt = new LivingRoomIndex();
             }
             std::string website;
-            website.resize(RoomUrlInfo.size() + 50);
-            char buff[50];
-            memset(buff, 0, 50);
+            website.resize(RoomUrlInfo.size() + 256);
+            char buff[256];
+            memset(buff, 0, 256);
             sprintf(buff, "?room_id=%lld&protocol=0,1&format=0,1,2&codec=0,1&qn=10000&platform=h5&ptype=8", i.RoomId);
             website = RoomUrlInfo + buff;
 
@@ -394,8 +395,8 @@ void LivingRoomIndexAnalysis()
              */
 
             auto Task = WFTaskFactory::create_http_task(website, 5, 2, [&](WFHttpTask *task)
-                                                        {
-    if(i.live_status==1){fprintf(stderr,"Room %s is Running\r\n");}
+{
+    if(i.live_status==1){fprintf(stderr,"\r\nRoom %s is Running\r\n");}
     protocol::HttpRequest *req = task->get_req();
     protocol::HttpResponse *resp = task->get_resp();
     int state = task->get_state();
@@ -440,8 +441,6 @@ void LivingRoomIndexAnalysis()
         fflush(rawbodyft);
         fclose(rawbodyft);
 
-
-
         std::string name , value;
         protocol::HttpHeaderCursor resp_cursor(resp);
         bool ThunckFlag=false;
@@ -453,17 +452,13 @@ void LivingRoomIndexAnalysis()
                 ThunckFlag=true;
             }
         }
-        fprintf(stderr, "\r\n");
+        fprintf(stderr, "\r\n#############################\r\n");
         int ThunckLen=0;
         if(ThunckFlag==true)
         {
             ThunckFlag= MergeChunkedBody((void*)body , body_len);
         }
 
-        void * membody=nullptr;
-        size_t membodysiz=0;
-
-       
         if(flg==false)return;
         auto FT  =fopen("fetch_file.txt","w+");
                 // fprintf(stderr,body+5);
@@ -479,20 +474,13 @@ void LivingRoomIndexAnalysis()
         assert(webdesc.IsObject() );
         // fprintf(stderr , "\nWebDesc is OBJ\n");
         // fprintf(stderr,"\r\n web dict is  %d \r\n" ,Web_Dict.GetType());
-        return; });
+        return; 
+        });
             auto req = Task->get_req();
-            // req->add_header_pair("Accept", "*/*");
-            // Content-Encoding:gzip
-            // Accept-Encoding:
-            // gzip, deflate, br
-            // Content-Encoding:gzip
-            req->add_header_pair("Sec-Fetch-Mode", "Sec-Fetch-Mode");
-            // Sec-Fetch-Mode:
-            // navigate
             req->add_header_pair("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.0.0 Safari/537.36 Edg/116.0.1938.62");
             req->add_header_pair("Connection", "close");
             Task->start();
         }
     }
-    sleep(10);
+    sleep(2);
 }

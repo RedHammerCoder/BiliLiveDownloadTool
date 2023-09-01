@@ -6,8 +6,9 @@ int main()
     Listening_liveroom_init();
     // GetliveStatus("4089850");
     UpdateRoomListMsg();
-    sleep(5);
+        sleep(3);
     LivingRoomIndexAnalysis();
+    fprintf(stderr , "\nPROGRAMDONE\n");
 
     return 0;
 }
