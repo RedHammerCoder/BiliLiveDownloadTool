@@ -30,3 +30,10 @@
 
 -  https://passport.bilibili.com/x/passport-login/web/cookie/info?csrf=aa0213079ddd7e9ff5fb24987a75368d
 
+## json path
+- array  /data/playurl_info/playurl/stream/  
+- get obj from array then for loop 
+- where protocal_name == "fmp4" then
+- current_qn==10000 and codec_name == "avc" 
+- base_url = "/live-bvc/374127/live_11332884_9386100_bluray/index.m3u8?"
+-  obj  url_info is array {host extra stream_ttl}

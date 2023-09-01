@@ -9,6 +9,7 @@
 #include <unistd.h>
 #include <sstream>
 #include <string.h>
+#include <rapidjson/pointer.h>
 using namespace rapidjson;
 std::deque<LiveHomeStatus> liveroom_list;
 const std::string web_live_status("https://api.live.bilibili.com/room/v1/Room/room_init");
@@ -474,6 +475,52 @@ void LivingRoomIndexAnalysis()
         assert(webdesc.IsObject() );
         // fprintf(stderr , "\nWebDesc is OBJ\n");
         // fprintf(stderr,"\r\n web dict is  %d \r\n" ,Web_Dict.GetType());
+        /**
+         * @todo 解析webdesc的网站内容并且填充liveroomlist
+         * 
+         */
+        auto  LiveStream = rapidjson::Pointer("/data/playurl_info/playurl/stream").Get(webdesc);
+        assert(LiveStream->IsArray());
+        fprintf(stderr,"\nENTRY TO Pointer\n");
+
+        for(auto  & Stream : LiveStream->GetArray() )
+        {
+            assert(Stream.HasMember("protocol_name"));
+            fprintf(stderr,"\nASSERT PROTO NAME\n");
+
+            std::string ProtoName =  Stream["protocol_name"].GetString();
+            if(strncmp(ProtoName.c_str(),"http_hls",strlen("http_hls"))!=0)continue;
+            for(auto & format : Stream["format"].GetArray())
+            {
+                fprintf(stderr,"\nENTRY Format name\n");
+                // assert(Stream)
+                auto formatName =  format["format_name"].GetString();
+
+                fprintf(stderr,"\n  formate name is %s\n",formatName);
+
+                if(strncmp(formatName  ,"fmp4",strlen("fmp4"))!=0)continue;
+                fprintf(stderr,"\nCODEC\n");
+                
+                for(auto & codeEle : format["codec"].GetArray())
+                {
+                    fprintf(stderr,"\nENTRY TO CODEC\n");
+
+                    auto codecname = codeEle["codec_name"].GetString();
+                    if(strncmp(codecname,"avc",strlen("avc"))!=0)continue;
+                    std::string UrlBase = codeEle["base_url"].GetString();
+                    fprintf(stderr,"\n######    URLBASE is #####%s###\n",UrlBase.c_str());
+
+
+                }
+
+
+                
+
+            }
+
+
+        }
+        // i.LivingRoomExt
         return; 
         });
             auto req = Task->get_req();
