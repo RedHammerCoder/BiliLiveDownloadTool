@@ -508,10 +508,13 @@ void LivingRoomIndexAnalysis()
                     auto codecname = codeEle["codec_name"].GetString();
                     if(strncmp(codecname,"avc",strlen("avc"))!=0)continue;
                     std::string UrlBase = codeEle["base_url"].GetString();
+                    auto url_info = codeEle["url_info"].GetObj();
                     fprintf(stderr,"\n######    URLBASE is #####%s###\n",UrlBase.c_str());
-
-
+                    i.LivingRoomExt->BaseUrl=std::move(UrlBase);
+                    i.LivingRoomExt->host=url_info["host"].GetString();
+                    i.LivingRoomExt->ExtraUrl=url_info["extra"].GetString();
                 }
+
 
 
                 

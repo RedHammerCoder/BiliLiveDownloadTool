@@ -83,7 +83,8 @@ class LivingRoomIndex {
      * 
      * @return * void 
      */
-    void UpdateUrl();
+    std::string Getm3u8Url();
+    // std::string Getm4sUrl();
 };
 
 // using Block = std::pair<void* >;
