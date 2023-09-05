@@ -26,6 +26,7 @@ set(
 set(
     EXEC_FETCH_STATUS 
     src/fetch_live_status.cpp
+    src/m3u8fetch.cpp
     example/example_fetch_live_status.cpp
 )
 
