@@ -16,6 +16,9 @@ const std::string web_live_status("https://api.live.bilibili.com/room/v1/Room/ro
 char *HOME = getenv("HOME");
 std::string default_profile_json = std::string(HOME) + "/.BiliLiveDown.json";
 
+
+
+
 std::vector<M4SVideo> m4slist;
 
 size_t
@@ -504,22 +507,26 @@ void LivingRoomIndexAnalysis()
                 for(auto & codeEle : format["codec"].GetArray())
                 {
                     fprintf(stderr,"\nENTRY TO CODEC\n");
-
+                    assert(codeEle["codec_name"].IsString());
                     auto codecname = codeEle["codec_name"].GetString();
                     if(strncmp(codecname,"avc",strlen("avc"))!=0)continue;
+                    // fprintf(stderr,"\nIn line %s\n",__LINE__);
+                    // fflush(stderr);
+
                     std::string UrlBase = codeEle["base_url"].GetString();
-                    auto url_info = codeEle["url_info"].GetObj();
+                    assert(codeEle["url_info"].IsArray());
+                    auto url_info_t = codeEle["url_info"].GetArray();
+                    auto url_info = url_info_t.Begin()->GetObject();
                     fprintf(stderr,"\n######    URLBASE is #####%s###\n",UrlBase.c_str());
                     i.LivingRoomExt->BaseUrl=std::move(UrlBase);
                     i.LivingRoomExt->host=url_info["host"].GetString();
                     i.LivingRoomExt->ExtraUrl=url_info["extra"].GetString();
+                    break;
                 }
-
-
-
-                
+                break;
 
             }
+            break;
 
 
         }

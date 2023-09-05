@@ -55,23 +55,24 @@ class LivingRoomIndex;
 struct LiveHomeStatus
 {
     uint64_t live_time;
-    char RoomId_chr [32]={0};
-    std::string RoomHostName;//used to fill host name  ; like "key725" "战鹰"，，parsed by json file
+    char RoomId_chr[32] = {0};
+    std::string RoomHostName; // used to fill host name  ; like "key725" "战鹰"，，parsed by json file
     uint64_t RoomId;
     bool Hidden;
     bool Lock;
     int live_status;
     bool encrypted;
-    LivingRoomIndex * LivingRoomExt=nullptr;
+    LivingRoomIndex *LivingRoomExt = nullptr;
 };
 /**
- * @brief 用于保存多种线路信息 
- * @name 
+ * @brief 用于保存多种线路信息
+ * @name
  */
-class LivingRoomIndex {
-    public:
+class LivingRoomIndex
+{
+public:
     std::string GeneratorUrl;
-    std::string formate_name,Codec_name;
+    std::string formate_name, Codec_name;
     std::string BaseUrl;
     std::string host;
     std::string ExtraUrl;
@@ -80,8 +81,8 @@ class LivingRoomIndex {
     /**
      * @brief 基于GeneratorUrl 更新多种url
      * formate_name Codec_name来源于选定的formate_name 以及 codec_name
-     * 
-     * @return * void 
+     *
+     * @return * void
      */
     std::string Getm3u8Url();
     // std::string Getm4sUrl();
@@ -96,21 +97,20 @@ extern std::vector<M4SVideo> m4slist;
 
 /**
  * @brief 在新获取的http m3u8 新于当前类的m3u8时候 本类析构并且初始化当前类的M4s列表
- * 
- * 
+ *
+ *
  */
-class M3u8Index{
-    public:
-    M3u8Index()=delete;
+class M3u8Index
+{
+public:
+    M3u8Index() = delete;
     M3u8Index(std::string head);
     std::string MediaSeq;
     std::string HeaderUri;
-    void* UniBlock;
+    void *UniBlock;
     size_t len;
-    std::vector<std::string>M4SList;
-
+    std::vector<std::string> M4SList;
 };
-
 
 extern std::deque<LiveHomeStatus> liveroom_list;
 
@@ -131,4 +131,40 @@ extern std::deque<LiveHomeStatus> liveroom_list;
 void LivingRoomIndexAnalysis();
 void Listening_liveroom_init();
 void UpdateRoomListMsg();
+
+template <int wait_time, typename EVENT>
+class LoopExecEvent
+{
+    EVENT _task;
+    int _timer;
+    bool _execFlag;
+    WFTimerTask *TASK;
+    std::function<void(WFTimerTask*)>  _exec;
+
+
+public:
+    LoopExecEvent(EVENT task) :  _task(std::move(task)), TASK(nullptr), _execFlag(false)
+    {
+        // fprintf(stderr , "per %d ms do log init\n" , wait_time);
+        _timer=wait_time;
+        // TASK =  WFTaskFactory::create_timer_task(wait_time, exec);
+        _exec = [&](WFTimerTask* task){ 
+                    // fprintf(stderr , "per %d ms   EXEC \n" , wait_time);
+            this->_task(); series_of(task)->push_back(WFTaskFactory::create_timer_task(_timer,_exec)); };
+    }
+    // void exec(WFTimerTask *task)
+    // {
+    //     // _task();
+    //     series_of(task)->push_back(WFTaskFactory::create_timer_task(_timer,_exec));
+    // }
+    void start()
+    {
+        _execFlag = true;
+        auto fg = WFTaskFactory::create_timer_task(_timer, _exec);
+        fg->start();
+    }
+    // void stop() { _execFlag = false; }
+    ~LoopExecEvent() = default;
+};
+
 #endif

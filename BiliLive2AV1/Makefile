@@ -1,4 +1,4 @@
-Test_FetchLiveStatus: clean
+Test_FetchLiveStatus:
 	cd build && cmake .. && make
 
 .PHONY : clean

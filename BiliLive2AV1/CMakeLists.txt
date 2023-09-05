@@ -56,3 +56,6 @@ target_link_libraries(FETCH_LIVE_STATUS libBIli_Live_Download_CORE.a ${WORKFLOW_
 
 target_include_directories(FETCH_LIVE_STATUS PUBLIC  ${HEADER_FETCH_STATUS})
 
+
+add_executable(timetask  example/Timer_loop_event.cpp)
+target_link_libraries(timetask  PUBLIC ${WORKFLOW_LIB})
