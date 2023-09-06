@@ -10,14 +10,20 @@ else(workflow_FOUND)
     message(FATAL_ERROR "WORKFLOW NOT FOUND")
 endif(workflow_FOUND)
 
+
+set(CMAKE_BUILD_TYPE DEBUG)
+
+
+
 set(
-    BIli_Live_Download
+    Bili_Live_Download
     src/fetch_live_status.cpp
+    src/m3u8fetch.cpp
 )
 
 
 set(
-    BIli_Live_Download_Header
+    Bili_Live_Download_Header
     inc/
 )
 
@@ -44,18 +50,36 @@ set(
     pthread
 )
 
+set(CMAKE_CXX_STANDARD 17)
+
 # FETCH_LIVE_STATUS
 
-add_library( BIli_Live_Download_CORE STATIC ${BIli_Live_Download} )
-target_include_directories(BIli_Live_Download_CORE PUBLIC ${BIli_Live_Download_Header})
-target_link_libraries(BIli_Live_Download_CORE ${WORKFLOW_LIB})
+add_library( Bili_Live_Download_CORE STATIC ${Bili_Live_Download} )
+message("entry to lib ")
+# set_target_properties(Bili_Live_Download_CORE PROPERTIES  CMAKE_CXX_STANDARD 17)
+set_property(TARGET Bili_Live_Download_CORE PROPERTY CXX_STANDARD 20 )
+target_include_directories(Bili_Live_Download_CORE PUBLIC ${Bili_Live_Download_Header})
+target_link_libraries( Bili_Live_Download_CORE  ${WORKFLOW_LIB})
+message("exit from entry")
 
 
 add_executable( FETCH_LIVE_STATUS example/example_fetch_live_status.cpp )
-target_link_directories(FETCH_LIVE_STATUS  PUBLIC build)
-target_link_libraries(FETCH_LIVE_STATUS libBIli_Live_Download_CORE.a ${WORKFLOW_LIB})
+target_link_directories(FETCH_LIVE_STATUS  PUBLIC build/)
+target_include_directories(FETCH_LIVE_STATUS PUBLIC  ${HEADER_FETCH_STATUS} )
+target_link_libraries(FETCH_LIVE_STATUS libBili_Live_Download_CORE.a  ${WORKFLOW_LIB})
 
-target_include_directories(FETCH_LIVE_STATUS PUBLIC  ${HEADER_FETCH_STATUS})
+add_executable(TestSpliteFile  example/splitefile.cpp)
+target_link_directories(TestSpliteFile PUBLIC build)
+target_include_directories(TestSpliteFile  PUBLIC  ${HEADER_FETCH_STATUS} )
+target_link_libraries(TestSpliteFile  PUBLIC   libBili_Live_Download_CORE.a  )
+# target_link_libraries(TestSpliteFile  PUBLIC    libBili_Live_Download_CORE.a)
+
+
+
+
+
+
+
 
 
 add_executable(timetask  example/Timer_loop_event.cpp)

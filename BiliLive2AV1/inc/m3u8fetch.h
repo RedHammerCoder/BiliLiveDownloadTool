@@ -1,5 +1,4 @@
-#ifndef _M3U8FETCH_
-#define _M3U8FETCH_
+
 #pragma once
 #include "fetch_live_status.h"
 #include <map>
@@ -25,45 +24,50 @@
 using BLOCK  = std::pair<void* , size_t > ;
 
 class SymbleSplite {
-    public :
+    private:
+
+    public:
     std::string_view _Src_Temp;
     SymbleSplite(std::string_view  sym):_Src_Temp(sym)
     {
-
+        _CurrentLine=0;
     }
-    size_t _splite_sym;
-    std::string_view GetNextView();
+    void Reset(std::string_view _template , char chr='\n')
+    {
+        _CurrentLine=0;
+        result_list.clear();
+        _Src_Temp=_template;
+        splitbychar(chr);
+    }
+    void splitbychar(char _chr='\n');
+    // size_t _sym_ptr;
+    size_t GetLine();
+    size_t _CurrentLine;
+    std::string_view* GetNextView();
     std::vector<std::string_view> result_list;
-    void Parserbychar(char _chr='\n');//todo : 将_SRC_TEMP_中间的的数据拆分放到result_list 中间
-
-
 };
 
 
 
-class m3u8fetch
-{
-private:
-    /* data */
-    std::mutex mtx_m4s;// if want to modify m4slist , the first thing is get this lock;
-    std::map<uint64_t ,std::pair<void* , size_t>> m4slist;//uint64_t 保存id
-    uint64_t min_m4s_nb;//保存最小的m4s id from m4slist   所有小于该数值的文件都已经写入存储
-    uint64_t Max_m4s_nb;//保存最大的m4s id from m4slist;  确保获取的m3u8文件下序列号小于等于该数值
-    void* EXT_X_MAP;
-    char* EXT_X_MAP_NAME;
-    LiveHomeStatus* _Parent;//用于获取当前的状态信息
-    size_t EXT_X_MAP_len;
-public:
-    m3u8fetch(LiveHomeStatus* Parent);
-    int updatem3u8list();//@todo : 更新m3u8文件列表
-    void Parserm3u8(BLOCK );
+// class m3u8fetch
+// {
+// private:
+//     /* data */
+//     std::mutex mtx_m4s;// if want to modify m4slist , the first thing is get this lock;
+//     std::map<uint64_t ,std::pair<void* , size_t>> m4slist;//uint64_t 保存id
+//     uint64_t min_m4s_nb;//保存最小的m4s id from m4slist   所有小于该数值的文件都已经写入存储
+//     uint64_t Max_m4s_nb;//保存最大的m4s id from m4slist;  确保获取的m3u8文件下序列号小于等于该数值
+//     void* EXT_X_MAP;
+//     char* EXT_X_MAP_NAME;
+//     LiveHomeStatus* _Parent;//用于获取当前的状态信息
+//     size_t EXT_X_MAP_len;
+// public:
+//     m3u8fetch(LiveHomeStatus* Parent);
+//     int updatem3u8list();//@todo : 更新m3u8文件列表
+//     void Parserm3u8(BLOCK );
     
 
 
-    ~m3u8fetch();
-};
+//     ~m3u8fetch();
+// };
 
-
-
-
-#endif
