@@ -14,6 +14,9 @@ m3u8fetch::m3u8fetch(LiveHomeStatus* parent):_Parent(parent)
 
 }
 
+inline size_t GetNextSymable(char* src, char dec);
+
+
 void m3u8fetch::Parserm3u8(BLOCK block)
 {
     auto & [chrptr , len ] = block;
@@ -23,13 +26,15 @@ void m3u8fetch::Parserm3u8(BLOCK block)
     char* charptr=(char*)chrptr;
     assert(strncmp(charptr ,"#EXTM3U" , strlen("#EXTM3U")==0 ));
     charptr+=unusedLen;
-    ss<<std::string(charptr , len-unusedLen);
-    char BUFF[60]={0};
-    ss.getline(BUFF,60);
-    assert(  strncmp(BUFF,"#EXT-X-MEDIA-SEQUENCE:",strlen("#EXT-X-MEDIA-SEQUENCE:"))  == 0);
-    ss.getline(BUFF , 60);
+}
+
+void SymbleSplite::Parserbychar(char _chr)
+{
 
 
 
 
+
+
+    return;
 }

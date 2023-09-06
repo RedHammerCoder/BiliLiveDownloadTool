@@ -6,12 +6,13 @@
 #include <string>
 #include <utility>
 #include <mutex>
-
+#include <string_view>
 /**
  * @brief 标准m3u8文件
 #EXTM3U  
 #EXT-X-VERSION:7
 #EXT-X-START:TIME-OFFSET=0
+
 #EXT-X-MEDIA-SEQUENCE:47187620
 #EXT-X-TARGETDURATION:1
 #EXT-X-MAP:URI="h1688140345.m4s"
@@ -23,6 +24,20 @@
  */
 using BLOCK  = std::pair<void* , size_t > ;
 
+class SymbleSplite {
+    public :
+    std::string_view _Src_Temp;
+    SymbleSplite(std::string_view  sym):_Src_Temp(sym)
+    {
+
+    }
+    size_t _splite_sym;
+    std::string_view GetNextView();
+    std::vector<std::string_view> result_list;
+    void Parserbychar(char _chr='\n');//todo : 将_SRC_TEMP_中间的的数据拆分放到result_list 中间
+
+
+};
 
 
 
