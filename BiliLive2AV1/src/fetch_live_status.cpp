@@ -541,3 +541,15 @@ void LivingRoomIndexAnalysis()
     }
     sleep(2);
 }
+
+
+std::string LiveHomeStatus::GetM3u8Url()
+{
+    if(live_status!=1)return std::string();
+    std::string ret_url;
+    ret_url.resize(this->LivingRoomExt->ExtraUrl.size()*2);
+    ret_url+=this->LivingRoomExt->host;
+    ret_url+=this->LivingRoomExt->BaseUrl;
+    ret_url+=this->LivingRoomExt->ExtraUrl;
+    return std::move(ret_url);
+    }

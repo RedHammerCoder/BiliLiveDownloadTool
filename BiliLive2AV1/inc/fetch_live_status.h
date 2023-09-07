@@ -63,6 +63,7 @@ struct LiveHomeStatus
     int live_status;
     bool encrypted;
     LivingRoomIndex *LivingRoomExt = nullptr;
+    std::string GetM3u8Url();
 };
 /**
  * @brief 用于保存多种线路信息
