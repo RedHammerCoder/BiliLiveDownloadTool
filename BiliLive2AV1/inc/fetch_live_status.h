@@ -132,6 +132,7 @@ extern std::deque<LiveHomeStatus> liveroom_list;
 void LivingRoomIndexAnalysis();
 void Listening_liveroom_init();
 void UpdateRoomListMsg();
+size_t MergeChunkedBody(void *_body, size_t &_body_len);
 
 template <int wait_time, typename EVENT>
 class LoopExecEvent

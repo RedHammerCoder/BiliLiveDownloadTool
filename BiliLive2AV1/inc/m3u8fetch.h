@@ -60,6 +60,7 @@ private:
     size_t EXT_X_MAP_len;
     WFTimerTask* FetchM3u8Task;
     const int Exec_time;
+    WFHttpTask * _task;
 
     struct
     {
@@ -69,7 +70,7 @@ private:
         std::string headFile;
 
     } CurrentM3u8file;
-    void TaskM3u8Fetch();
+    int CreateFetchTask();
 
 public:
     // void Getm3u8file();

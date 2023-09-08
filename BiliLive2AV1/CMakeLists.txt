@@ -77,7 +77,8 @@ target_link_libraries(TestSpliteFile  PUBLIC  libBili_Live_Download_CORE.so  ${W
 # target_link_libraries(TestSpliteFile  PUBLIC    libBili_Live_Download_CORE.a)
 
 
-
+add_executable(workflow_livetime  example/WorkflowliveCycl.cpp)
+target_link_libraries(workflow_livetime PUBLIC ${WORKFLOW_LIB})
 
 
 

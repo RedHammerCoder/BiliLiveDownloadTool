@@ -4,13 +4,16 @@
 #include <sstream>
 #include <thread>
 #include <iostream>
+#include <memory>
 
 constexpr size_t unusedLen = strlen("#EXTM3U\n#EXT-X-VERSION:7\n#EXT-X-START:TIME-OFFSET=0\n");
 constexpr int TargDurLen = strlen("#EXT-X-TARGETDURATION");
 constexpr int MapUrILen = strlen("#EXT-X-MAP:URI");
 constexpr int EXTINF = strlen("#EXTINF:");
 
-m3u8fetch::m3u8fetch(LiveHomeStatus *parent) : _Parent(parent),Exec_time(1000) 
+
+
+m3u8fetch::m3u8fetch(LiveHomeStatus *parent) : _Parent(parent), Exec_time(1000)
 {
     // FetchM3u8Task = WFTaskFactory::create_http_task()
 }
@@ -29,11 +32,11 @@ int m3u8fetch::Parserm3u8(char *ptr, size_t len)
     ss >> line;
     uint64_t SeqId = 0;
     sscanf(line.c_str(), "#EXT-X-MEDIA-SEQUENCE:%lld", &SeqId);
-        std::cout << "\n seq  id is " << SeqId << std::endl;
+    std::cout << "\n seq  id is " << SeqId << std::endl;
 
-    #ifdef Debug
+#ifdef Debug
     goto UpdateM4slist;
-    #endif
+#endif
     if (SeqId < CurrentM3u8file.SeqId)
         return -1;
     if (SeqId == CurrentM3u8file.SeqId)
@@ -81,42 +84,44 @@ UpdateM4slist:
             continue;
         }
 
-        if (sbstr.substr(0,TargDurLen) == (std::string_view("#EXT-X-TARGETDURATION").substr(0,TargDurLen)))
+        if (sbstr.substr(0, TargDurLen) == (std::string_view("#EXT-X-TARGETDURATION").substr(0, TargDurLen)))
         {
             continue;
         }
         //
         // std::cout << "uri is " << sbstr.substr(8) << std::endl;
-        if (sbstr.substr(0,MapUrILen) == (std::string_view("#EXT-X-MAP:URI")).substr(0,MapUrILen))
+        if (sbstr.substr(0, MapUrILen) == (std::string_view("#EXT-X-MAP:URI")).substr(0, MapUrILen))
         {
             // continue;
             // std::cout << "#######find a ext map uri" << std::endl;
             // ss>>line;
-            char buffs[40]={0};
-            sscanf(line.c_str(),"#EXT-X-MAP:URI=\"%s",buffs);
-            if(buffs[strlen(buffs)-1]=='\"')
+            char buffs[40] = {0};
+            sscanf(line.c_str(), "#EXT-X-MAP:URI=\"%s", buffs);
+            if (buffs[strlen(buffs) - 1] == '\"')
             {
-                buffs[strlen(buffs)-1]=0;
+                buffs[strlen(buffs) - 1] = 0;
             }
             std::string headfile(buffs);
-            CurrentM3u8file.headFile=std::move(headfile);
-            printf("BUFFis%s" , buffs );
+            CurrentM3u8file.headFile = std::move(headfile);
+            printf("BUFFis%s", buffs);
             continue;
         }
     }
 #ifdef Debug
-    std::cout<<"Current M3u8 parserd "<<CurrentM3u8file.headFile<<" end"<<std::endl;
+    std::cout << "Current M3u8 parserd " << CurrentM3u8file.headFile << " end" << std::endl;
 #endif
     return 0;
 }
 
+#if 0
 void m3u8fetch::TaskM3u8Fetch()
 {
     // this->FetchM3u8Task =  WFTaskFactory::create_timer_task(Exec_time ,[]() );
-    if(this->_Parent->live_status!=1)return;
+    if (this->_Parent->live_status != 1)
+        return;
     std::string M3u8Url = this->_Parent->GetM3u8Url();
-
 }
+#endif
 
 size_t SymbleSplite::GetLine()
 {
@@ -155,4 +160,43 @@ void SymbleSplite::splitbychar(char _chr)
     // TODO ： 解决不存在分隔符以及最后一个字符是分隔符的情况；
     result_list.push_back(std::string_view(src + _sym_ptr, _ptr_tail));
     return;
+}
+
+
+int m3u8fetch::CreateFetchTask()
+{
+    if(_Parent->live_status!=1)return -1;
+    std::string m3u8Url= _Parent->GetM3u8Url();
+    if(_task==nullptr)
+    {
+        _task=WFTaskFactory::create_http_task(m3u8Url , 3,2 , [](WFHttpTask* task)
+        {
+            protocol::HttpRequest * req = task->get_req();
+            protocol::HttpResponse * resp = task->get_resp();
+            int state = task->get_state();
+            int error = task->get_error();
+            if(state!= WFT_STATE_SUCCESS)
+            {
+                fprintf(stderr , "Failed in %s",__LINE__);
+                return;
+            }
+            void * body=nullptr;
+            size_t body_len=0;
+            resp->get_parsed_body(&body, &body_len);
+            void* Content = malloc(body_len);
+            mempcpy(Content , body , body_len);
+            /**
+             * @todo 获取json信息以后将信息
+             * 
+             */
+            series_of(task)->push_back(WFTaskFactory::create_timer_task(100, [=](WFTimerTask* task)
+            {
+                // body_len  Content
+                Parserm3u8((char*)Content , body_len);
+                free(Content);
+            }));
+
+        });
+    }
+
 }
