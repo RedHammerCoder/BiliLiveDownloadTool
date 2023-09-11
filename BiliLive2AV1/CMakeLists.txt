@@ -21,6 +21,7 @@ set(
     Bili_Live_Download
     src/fetch_live_status.cpp
     src/m3u8fetch.cpp
+    src/KExecutor.cpp
 )
 
 

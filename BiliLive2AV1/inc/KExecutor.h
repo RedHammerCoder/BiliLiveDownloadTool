@@ -10,8 +10,7 @@
 #include <unistd.h>
 #include <assert.h>
 #include <mutex>
-class Executor;
-
+class KExecutor;
 using ExecNode = std::function<void(void)>;
 class ExecutorManager
 {
@@ -25,30 +24,39 @@ class ExecutorManager
     std::thread thr;
     bool execflag;
     std::map<int64_t , std::weak_ptr<ExecNode> > TaskMap;
-    void _start()
+    ExecNode _startNode;
+
+    public :
+        void _start()
     {
         while (execflag)
         {
+            fprintf(stderr , "   -------------loop exec ----------------\n");
             std::lock_guard lgx(mtx_taskmap);
-            if(TaskMap.size()==1){sleep(1);continue;}
+            if(TaskMap.size()==0){sleep(1);continue;}
             for(auto& node  : TaskMap )
             {
-                if(node.second.expired())continue;//保管对象已经删除
+                if(node.second.expired()){
+                    fprintf(stderr , "saved obj is deleted\n");
+                    continue;}//保管对象已经删除
                 //todo : 保管对象没有删除时候
                 (*(node.second.lock()).get())();//执行node的代码
+                                    fprintf(stderr , "Node exec\n");
+
+
             }
             sleep(4);
         }
         
     }
-    public :
     ExecutorManager():execflag(true)
     {
+        _startNode=[&](){this->_start();};
         tasksum.store(0);
     }
     void Start()
     {
-        std::thread t(_start);
+        std::thread t(_startNode);
         thr=std::move(t);
     }
     int  uploadNode(std::weak_ptr<ExecNode> Task)
@@ -60,12 +68,12 @@ class ExecutorManager
     ~ExecutorManager()
     {
         execflag=false;
-        assert(thr.joinable());
-        thr.join();
+        if(thr.joinable())thr.join();
     }
-};
+} ;
+extern ExecutorManager Default_ExecutorManager;
 
-class Executor
+class KExecutor
 {
 private:
     // std::function<void(void)> _Task;
@@ -74,7 +82,7 @@ private:
     ExecutorManager* _manager;
 
     public:
-    Executor(ExecutorManager * manager):_manager(manager){}
+    KExecutor(ExecutorManager * manager):_manager(manager){}
     void SetTask(ExecNode task)
     {
         // _Task=std::move(task);
@@ -82,10 +90,11 @@ private:
     }
     void UploadNode()
     {
+        fprintf(stderr , "____________  upload node --------------");
         ID = _manager->uploadNode(_Task);
 
     }
-    virtual ~Executor(){}
+    virtual ~KExecutor(){}
 };
 
 

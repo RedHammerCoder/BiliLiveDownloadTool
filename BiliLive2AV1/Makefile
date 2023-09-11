@@ -1,5 +1,5 @@
 Test_FetchLiveStatus:
-	cd build && cmake .. && make -j15
+	cd build && cmake .. && make  -j20 
 
 .PHONY : clean
 

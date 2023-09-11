@@ -10,6 +10,8 @@
 #include <sstream>
 #include <string.h>
 #include <rapidjson/pointer.h>
+#include <m3u8fetch.h>
+
 using namespace rapidjson;
 std::deque<LiveHomeStatus> liveroom_list;
 const std::string web_live_status("https://api.live.bilibili.com/room/v1/Room/room_init");
@@ -381,10 +383,14 @@ void LivingRoomIndexAnalysis()
     {
         if (i.live_status == 1)
         {
+
             if (i.LivingRoomExt == nullptr)
             {
                 i.LivingRoomExt = new LivingRoomIndex();
             }
+            LiveHomeStatus * adr = &i;
+            m3u8fetch* m3u8node =  new m3u8fetch(adr);
+
             std::string website;
             website.resize(RoomUrlInfo.size() + 256);
             char buff[256];
@@ -438,7 +444,6 @@ void LivingRoomIndexAnalysis()
         size_t body_len;
         resp->get_raw_body(&rawbody,&rawbody_len);
         bool flg= resp->get_parsed_body( &body,&body_len);
-
 
         auto rawbodyft  =fopen("rawbody.txt","w+");
         fwrite(rawbody, 1, rawbody_len, rawbodyft);
@@ -509,6 +514,7 @@ void LivingRoomIndexAnalysis()
                     fprintf(stderr,"\nENTRY TO CODEC\n");
                     assert(codeEle["codec_name"].IsString());
                     auto codecname = codeEle["codec_name"].GetString();
+                    fprintf(stderr , "codec name is %s \n",codecname);
                     if(strncmp(codecname,"avc",strlen("avc"))!=0)continue;
                     // fprintf(stderr,"\nIn line %s\n",__LINE__);
                     // fflush(stderr);
@@ -521,6 +527,7 @@ void LivingRoomIndexAnalysis()
                     i.LivingRoomExt->BaseUrl=std::move(UrlBase);
                     i.LivingRoomExt->host=url_info["host"].GetString();
                     i.LivingRoomExt->ExtraUrl=url_info["extra"].GetString();
+                    fprintf(stderr,"\n######  UNI_URL #####%s###\n",(i.LivingRoomExt->host+i.LivingRoomExt->BaseUrl+i.LivingRoomExt->ExtraUrl).c_str()    );
                     break;
                 }
                 break;
@@ -545,11 +552,13 @@ void LivingRoomIndexAnalysis()
 
 std::string LiveHomeStatus::GetM3u8Url()
 {
+    // assert(live_status==1);
     if(live_status!=1)return std::string();
     std::string ret_url;
-    ret_url.resize(this->LivingRoomExt->ExtraUrl.size()*2);
+    // ret_url.resize(this->LivingRoomExt->ExtraUrl.size()*2);
     ret_url+=this->LivingRoomExt->host;
     ret_url+=this->LivingRoomExt->BaseUrl;
     ret_url+=this->LivingRoomExt->ExtraUrl;
+    fprintf(stderr , "u3m8 addr is %s  \n",ret_url.c_str());
     return std::move(ret_url);
     }

@@ -5,6 +5,7 @@
 #include <string>
 #include <utility>
 #include <mutex>
+#include "KExecutor.h"
 #include <string_view>
 /**
  * @brief 标准m3u8文件
@@ -46,7 +47,7 @@ public:
     std::vector<std::string_view> result_list;
 };
 
-class m3u8fetch
+class m3u8fetch :public KExecutor
 {
 private:
     /* data */
@@ -72,24 +73,45 @@ private:
 
     } CurrentM3u8file;
     int CreateFetchTask();
+    void resetUri()
+    {
+        free( this->_task);
+        _task=nullptr;
+        try_start();
+
+    }
 
 public:
     // void Getm3u8file();
     m3u8fetch(LiveHomeStatus *Parent);
     int try_start()
     {
+        if(_Parent->live_status!=1)return -1;
+        fprintf(stderr , "m3u8 fetched\n");
         if(Url_m3u8.size()==0)
         {
-            Url_m3u8= this->_Parent->GetM3u8Url();
-            if(Url_m3u8.size()==0)return -1;
+            Url_m3u8= std::move( this->_Parent->GetM3u8Url());
+            fprintf(stderr , "----------########  m3u8 add is %s\n",Url_m3u8.c_str());
+            if(Url_m3u8.size()==0)
+            {
+                // fprintf(stderr , "get m3 u8 file err---------------------\n");
+                return -1;
+            }
         }
+        if(_task==nullptr)
+        {
+            CreateFetchTask();
+        }
+        assert(this->_task!=nullptr);
         if (_task != nullptr)
         {
+            fprintf(stderr , "------------m3u8 http start-----------\n");
             this->_task->start();
             return 0;
         }
     }
     // int updatem3u8list();//@todo : 更新m3u8文件列表
     int Parserm3u8(char *, size_t); // 解析m3u8文件并且
+    void RegisterExecutor();
     ~m3u8fetch() = default;
 };

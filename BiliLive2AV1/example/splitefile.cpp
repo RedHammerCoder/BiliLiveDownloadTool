@@ -17,35 +17,5 @@ int main()
 
 
 
-
-
-
-
-
-    // printf(BUFF);
-    // SymbleSplite spi(std::string_view(BUFF , len));
-    // spi.splitbychar();
-    // spi.splitbychar();
-
-    // getline()
-
-    // printf("splite len is %d \n", spi.GetLine());
-    // for(auto & ref : spi.result_list)
-    // {
-
-        // std::string_view sv = ref.substr(3);
-        // std::cout<<ref<<std::endl;
-         
-    // }
-
-    
-
-
-
-
-
-
-
-
     return 0;
 }

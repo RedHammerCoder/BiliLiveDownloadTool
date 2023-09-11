@@ -1,6 +1,6 @@
 #include "fetch_live_status.h"
 #include <sys/unistd.h>
-
+#include "KExecutor.h"
 void appendtimer( int& len)
 {
 
@@ -10,6 +10,7 @@ int main()
 {
     // FILE * fd =  fopen("timerlog.txt","w+");
     int len =0;
+    Default_ExecutorManager.Start();
     auto exec = [&]()
     {
         appendtimer(len);
@@ -22,7 +23,7 @@ int main()
         sleep(3);
     LivingRoomIndexAnalysis();
     
-    sleep(4);
+    sleep(40);
     fprintf(stderr , "\nPROGRAMDONE\n");
     // fclose(fd);
 

@@ -11,15 +11,29 @@ constexpr int TargDurLen = strlen("#EXT-X-TARGETDURATION");
 constexpr int MapUrILen = strlen("#EXT-X-MAP:URI");
 constexpr int EXTINF = strlen("#EXTINF:");
 
-
-
-m3u8fetch::m3u8fetch(LiveHomeStatus *parent) : _Parent(parent), Exec_time(1000)
+m3u8fetch::m3u8fetch(LiveHomeStatus *parent) : _Parent(parent), Exec_time(1000), KExecutor(&Default_ExecutorManager)
 {
     // FetchM3u8Task = WFTaskFactory::create_http_task()
-    if(_Parent->live_status==1)
+    fprintf(stderr, "  ### ### ###   m3u8 analysisd");
+    if (_Parent->live_status == 1)
     {
         this->CreateFetchTask();
     }
+    assert(_task != nullptr);
+    RegisterExecutor();
+}
+
+void m3u8fetch::RegisterExecutor()
+{
+    auto tsk = [&]()
+    {
+        fprintf(stderr, " ##  ##  ##register exec------------------\n");
+        this->resetUri();
+    };
+    KExecutor::SetTask(tsk);
+    UploadNode();
+    // KExecutor::S
+    // UploadNode(tsk);
 }
 
 int m3u8fetch::Parserm3u8(char *ptr, size_t len)
@@ -29,6 +43,7 @@ int m3u8fetch::Parserm3u8(char *ptr, size_t len)
     char *charptr = ptr;
     // printf("BUFF is \n%s  \n", charptr);
     fflush(stdout);
+    fprintf(stderr, charptr);
     assert(strncmp(charptr, "#EXTM3U", strlen("#EXTM3U")) == 0);
     charptr = charptr + unusedLen;
     ss << std::string(charptr);
@@ -78,6 +93,7 @@ UpdateM4slist:
             // std::cout<<"\nfind a # EXT_INF"<<std::endl;
             ss >> line;
             sscanf(line.c_str(), "%lld.m4s", &m4sId);
+            fprintf(stderr, "m4s is %lld", m4sId);
             std::cout << "m4s is" << m4sId << ".m4s" << std::endl;
             BLOCK empty;
             empty.first = nullptr;
@@ -166,39 +182,65 @@ void SymbleSplite::splitbychar(char _chr)
     return;
 }
 
-
 int m3u8fetch::CreateFetchTask()
 {
-    if(_task==nullptr)
+    if (_task == nullptr)
     {
-        _task=WFTaskFactory::create_http_task(Url_m3u8 , 3,2 , [=](WFHttpTask* task)
-        {
-            protocol::HttpRequest * req = task->get_req();
-            protocol::HttpResponse * resp = task->get_resp();
-            int state = task->get_state();
-            int error = task->get_error();
-            if(state!= WFT_STATE_SUCCESS)
-            {
-                fprintf(stderr , "Failed in %s",__LINE__);
-                return;
-            }
-            const void * body=nullptr;
-            size_t body_len=0;
-            resp->get_parsed_body(&body, &body_len);
-            void* Content = malloc(body_len);
-            mempcpy(Content , body , body_len);
-            /**
-             * @todo 获取json信息以后将信息
-             * 
-             */
-            series_of(task)->push_back(WFTaskFactory::create_timer_task(100, [=](WFTimerTask* task)
-            {
-                // body_len  Content
-                Parserm3u8((char*)Content , body_len);
-                free(Content);
-            }));
 
-        });
+        _task = WFTaskFactory::create_http_task(Url_m3u8, 5, 2, [=](WFHttpTask *task)
+                                                {
+                                                    fprintf(stderr, "----------start to slove m3u8file-----------\n");
+
+                                                    protocol::HttpRequest *req = task->get_req();
+                                                    protocol::HttpResponse *resp = task->get_resp();
+                                                    int state = task->get_state();
+                                                    int error = task->get_error();
+
+                                                    switch (state)
+                                                    {
+                                                    case WFT_STATE_SYS_ERROR:
+                                                        fprintf(stderr, "system error: %s\n", strerror(error));
+                                                        break;
+                                                    case WFT_STATE_DNS_ERROR:
+                                                        fprintf(stderr, "DNS error: %s\n", gai_strerror(error));
+                                                        break;
+                                                    case WFT_STATE_SSL_ERROR:
+                                                        fprintf(stderr, "SSL error: %d\n", error);
+                                                        break;
+                                                    case WFT_STATE_TASK_ERROR:
+                                                        fprintf(stderr, "Task error: %d\n", error);
+                                                        break;
+                                                    case WFT_STATE_SUCCESS:
+                                                        break;
+                                                    }
+
+                                                    if (state != WFT_STATE_SUCCESS)
+                                                    {
+                                                        fprintf(stderr, "Failed. Press Ctrl-C to exit.\n");
+                                                        return;
+                                                    }
+                                                    fprintf(stderr, "----------start to slove m3u8file---jj--------\n");
+                                                    fflush(stderr);
+                                                    const void *body = nullptr;
+                                                    size_t body_len = 0;
+                                                    resp->get_parsed_body(&body, &body_len);
+                                                    void *Content = malloc(body_len);
+                                                    assert(body_len != 0);
+                                                    mempcpy(Content, body, body_len);
+                                                    /**
+                                                     * @todo 获取json信息以后将信息
+                                                     *
+                                                     */
+                                                    series_of(task)->push_back(WFTaskFactory::create_go_task("parser_m3u8",[=](){
+                                                        Parserm3u8((char*)Content , body_len);
+                                                        free(Content);
+                                                    }) )  ;
+                                                  
+                                                });
+
+        protocol::HttpRequest *req = _task->get_req();
+        req->add_header_pair("Accept", "*/*");
+        req->add_header_pair("User-Agent", "Wget/1.14 (linux-gnu)");
+        req->add_header_pair("Connection", "close");
     }
-
 }
