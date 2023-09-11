@@ -56,11 +56,12 @@ private:
     uint64_t Max_m4s_nb;                                   // 保存最大的m4s id from m4slist;  确保获取的m3u8文件下序列号小于等于该数值
     void *EXT_X_MAP;
     char *EXT_X_MAP_NAME;
+    std::string Url_m3u8;
     LiveHomeStatus *_Parent; // 用于获取当前的状态信息
     size_t EXT_X_MAP_len;
-    WFTimerTask* FetchM3u8Task;
+    WFTimerTask *FetchM3u8Task;
     const int Exec_time;
-    WFHttpTask * _task;
+    WFHttpTask *_task;
 
     struct
     {
@@ -75,6 +76,19 @@ private:
 public:
     // void Getm3u8file();
     m3u8fetch(LiveHomeStatus *Parent);
+    int try_start()
+    {
+        if(Url_m3u8.size()==0)
+        {
+            Url_m3u8= this->_Parent->GetM3u8Url();
+            if(Url_m3u8.size()==0)return -1;
+        }
+        if (_task != nullptr)
+        {
+            this->_task->start();
+            return 0;
+        }
+    }
     // int updatem3u8list();//@todo : 更新m3u8文件列表
     int Parserm3u8(char *, size_t); // 解析m3u8文件并且
     ~m3u8fetch() = default;

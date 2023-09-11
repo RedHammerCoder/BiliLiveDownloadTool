@@ -8,23 +8,23 @@ void appendtimer( int& len)
 }
 int main()
 {
-    FILE * fd =  fopen("timerlog.txt","w+");
+    // FILE * fd =  fopen("timerlog.txt","w+");
     int len =0;
     auto exec = [&]()
     {
         appendtimer(len);
     };
-    LoopExecEvent<300000 , decltype( exec)>   execnode(exec);
-    execnode.start(); 
+    // LoopExecEvent<300000 , decltype( exec)>   execnode(exec);
+    // execnode.start(); 
     Listening_liveroom_init();
     // GetliveStatus("4089850");
     UpdateRoomListMsg();
         sleep(3);
     LivingRoomIndexAnalysis();
     
-    sleep(20);
+    sleep(4);
     fprintf(stderr , "\nPROGRAMDONE\n");
-    fclose(fd);
+    // fclose(fd);
 
     return 0;
 }

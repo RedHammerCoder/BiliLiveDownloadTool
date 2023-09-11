@@ -52,6 +52,7 @@
  */
 
 class LivingRoomIndex;
+class m3u8fetch;
 struct LiveHomeStatus
 {
     uint64_t live_time;
@@ -64,6 +65,7 @@ struct LiveHomeStatus
     bool encrypted;
     LivingRoomIndex *LivingRoomExt = nullptr;
     std::string GetM3u8Url();
+    m3u8fetch *FetchM3u8Node;
 };
 /**
  * @brief 用于保存多种线路信息

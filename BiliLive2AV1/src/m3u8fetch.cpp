@@ -16,6 +16,10 @@ constexpr int EXTINF = strlen("#EXTINF:");
 m3u8fetch::m3u8fetch(LiveHomeStatus *parent) : _Parent(parent), Exec_time(1000)
 {
     // FetchM3u8Task = WFTaskFactory::create_http_task()
+    if(_Parent->live_status==1)
+    {
+        this->CreateFetchTask();
+    }
 }
 
 int m3u8fetch::Parserm3u8(char *ptr, size_t len)
@@ -165,11 +169,9 @@ void SymbleSplite::splitbychar(char _chr)
 
 int m3u8fetch::CreateFetchTask()
 {
-    if(_Parent->live_status!=1)return -1;
-    std::string m3u8Url= _Parent->GetM3u8Url();
     if(_task==nullptr)
     {
-        _task=WFTaskFactory::create_http_task(m3u8Url , 3,2 , [](WFHttpTask* task)
+        _task=WFTaskFactory::create_http_task(Url_m3u8 , 3,2 , [=](WFHttpTask* task)
         {
             protocol::HttpRequest * req = task->get_req();
             protocol::HttpResponse * resp = task->get_resp();
@@ -180,7 +182,7 @@ int m3u8fetch::CreateFetchTask()
                 fprintf(stderr , "Failed in %s",__LINE__);
                 return;
             }
-            void * body=nullptr;
+            const void * body=nullptr;
             size_t body_len=0;
             resp->get_parsed_body(&body, &body_len);
             void* Content = malloc(body_len);
