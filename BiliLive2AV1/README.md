@@ -1,10 +1,15 @@
 # BiliLive2AV1 开发LOG
-## desc : 将bilibili直播下载下来转换为av1编码
+## desc : 将bilibili直播下载下来转换为MP4文件
 ## TODOLIST
+1. 实现应对 主播重启直播间导致的header变化以及下载流的改变 避免不同header的m4s文件写入同意列队中
+ - 根据livetime的变化 判断是否需要重启视频流
+ - 完善body的生命周期  避免内存泄露
 ### https
 1. 建立维护https接口 实现使用https 与bilibili建立链接关系
 2. workflow 库 简化轮子操作
-3. 记录分析bilibili api 的参数以及对应影响 
+3. 记录分析bilibili api 的参数以及对应影响
+- #### 内部异常： 
+  -  获取部分网站的http数据时候会有ssl error错误；
 
 ### regex
 1. 正则表达式 
@@ -64,3 +69,7 @@ expires=1694509597&len=0&oi=979675362&pt=web&qn=0&trid=1007a8272a0f15a54795a7848
 
 
 https://d1--cn-gotcha208.bilivideo.com/live-bvc/568137/live_322892_3999292_1500/53547635.m4s?expires=1694517689&len=0&oi=979675362&pt=web&qn=0&trid=1007c2d42c6c69d74f03a8cf789f14c8a3f3&sigparams=cdn,expires,len,oi,pt,qn,trid&cdn=cn-gotcha208&sign=eb43db6484c7536eb61a8ffc766983c1&sk=657866af8fc16d8b2b84dfdde3e981438dff44b02a5b137933388fa4fca4c196&p2p_type=1&sl=3&free_type=0&mid=181473946&pp=rtmp&source=onetier&trace=4&site=d24c4467b5a4cbe5236a70b458712993&order=1
+
+
+
+# TODO: 

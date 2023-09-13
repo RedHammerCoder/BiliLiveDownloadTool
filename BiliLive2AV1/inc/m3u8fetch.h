@@ -87,6 +87,7 @@ private:
     }
 
 public:
+    std::string GetHeaderFileName(){return CurrentM3u8file.headFile;}
     // void Getm3u8file();
     void GetHeadfile();
     m3u8fetch(LiveHomeStatus *Parent);

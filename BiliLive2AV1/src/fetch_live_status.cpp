@@ -10,7 +10,8 @@
 #include <sstream>
 #include <string.h>
 #include <rapidjson/pointer.h>
-#include <m3u8fetch.h>
+#include "m3u8fetch.h"
+#include "m4s2mp4.h"
 #include <workflow/WFFacilities.h>
 
 using namespace rapidjson;
@@ -216,6 +217,13 @@ void Listening_liveroom_init()
         exit(-1);
     }
     // assert(Parsed_json.HasMember("liveRoom"));
+
+    if (Parsed_json.HasMember("defaultpath"))
+    {
+        std::string defaultpath(Parsed_json["defaultpath"].GetString());
+        SetDefaultPath(defaultpath);
+    }
+
     auto roomlists = Parsed_json["liveRoom"].GetArray();
     // fprintf(stderr,"#ENTRY to Parser\r\n");
 
@@ -295,17 +303,17 @@ void UpdateRoomListMsg()
             int reason_phrase = strncmp(resp->get_reason_phrase(), "OK", 2);
             if (statuscode != 0 || reason_phrase != 0)
             {
-                fprintf(stderr, "%s\r\n", "status code OR reason_phrase ERROR");
+                fprintf(stderr, "%s\r\n", "status code OR reason_phrase ERROR\n");
                 return;
             }
-            auto uri = req->get_request_uri();
-            fprintf(stderr, "entry to req_resp\r\n");
-            size_t Uri_len = strlen(uri);
+            // auto uri = req->get_request_uri();
+            // fprintf(stderr, "entry to req_resp\r\n");
+            // size_t Uri_len = strlen(uri);
             resp->get_parsed_body(&body, &body_len);
             fprintf(stderr, "@@ body size is %ld\r\n", body_len);
             fwrite(body, 1, body_len, stderr);
             fflush(stderr);
-            fprintf(stderr, "http req web URI  %s   %d \r\n", uri, Uri_len);
+            // fprintf(stderr, "http req web URI  %s   %d \r\n", uri, Uri_len);
 
             /**
              * @todo parsering message from body with json formates
@@ -365,6 +373,10 @@ void UpdateRoomListMsg()
         req->add_header_pair("User-Agent", "Mozilla/5.0");
         req->add_header_pair("Connection", "close");
         task->start();
+        /**
+         * @todo : 添加强制性检查 ； 保证所有task都完成后才返回
+         *
+         */
     }
 
     return;
@@ -459,7 +471,6 @@ void LivingRoomIndexAnalysis()
                 ThunckFlag=true;
             }
         }
-        fprintf(stderr, "\r\n#############################\r\n");
         int ThunckLen=0;
         if(ThunckFlag==true)
         {
@@ -599,7 +610,7 @@ std::string LiveHomeStatus::GetM4sUrl(uint64_t m4s_id)
 
 int FetchHttpBody(const std::string uri, const void **ptr, size_t *len)
 {
-    printf("exec start\n and uri is %s ",uri.c_str());
+    printf("exec start\n and uri is %s ", uri.c_str());
     WFFacilities::WaitGroup wg(1);
     int state = 0;
     auto task_callback = [&wg, &ptr, &len, &state](WFHttpTask *task)

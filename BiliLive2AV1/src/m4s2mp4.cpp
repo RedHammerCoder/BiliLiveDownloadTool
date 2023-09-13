@@ -16,9 +16,19 @@ void m4s2mp4::InitFile()
 {
     if(file==nullptr);
     assert(_m4s_filename.size()!=0);
-    std::string Path = Default_Path+'/'+_m4s_dir+_m4s_filename;
+    std::string Path = Default_Path+'/'+_m4s_dir+'/'+_m4s_filename;
     file = fopen(Path.c_str(),"w+");
-
+    const void* ptr=nullptr;
+    size_t ptr_len = 0;
+    std::string m4sheader = this->m3u8list->GetHeaderFileName();
+    std::string header_url = this->LiveStatus->GetM4sContent(m4sheader);
+    int state =  FetchHttpBody(header_url,&ptr,&ptr_len);
+    if(state!=WFT_STATE_SUCCESS)
+    {
+        fprintf(stderr , "Get header file error \n");
+        return;
+    }
+    fwrite(ptr,ptr_len,1,file);
 }
 
 void m4s2mp4::GetM4sList()

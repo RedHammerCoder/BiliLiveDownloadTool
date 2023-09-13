@@ -11,12 +11,6 @@ int main()
     // FILE * fd =  fopen("timerlog.txt","w+");
     int len =0;
     Default_ExecutorManager.Start();
-    auto exec = [&]()
-    {
-        appendtimer(len);
-    };
-    // LoopExecEvent<300000 , decltype( exec)>   execnode(exec);
-    // execnode.start(); 
     Listening_liveroom_init();
     // GetliveStatus("4089850");
     UpdateRoomListMsg();
