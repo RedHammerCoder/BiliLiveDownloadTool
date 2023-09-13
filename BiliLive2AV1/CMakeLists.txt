@@ -22,6 +22,7 @@ set(
     src/fetch_live_status.cpp
     src/m3u8fetch.cpp
     src/KExecutor.cpp
+    src/m4s2mp4.cpp
 )
 
 
@@ -66,10 +67,18 @@ target_link_libraries( Bili_Live_Download_CORE  ${WORKFLOW_LIB})
 message("exit from entry")
 
 
+
+
 add_executable( FETCH_LIVE_STATUS example/example_fetch_live_status.cpp )
 target_link_directories(FETCH_LIVE_STATUS  PUBLIC build/)
 target_include_directories(FETCH_LIVE_STATUS PUBLIC  ${HEADER_FETCH_STATUS} )
 target_link_libraries(FETCH_LIVE_STATUS libBili_Live_Download_CORE.so  ${WORKFLOW_LIB})
+
+add_executable(wget example/wget.cpp)
+target_link_directories(wget  PUBLIC build/)
+target_include_directories(wget PUBLIC  ${HEADER_FETCH_STATUS})
+target_link_libraries(wget libBili_Live_Download_CORE.so ${WORKFLOW_LIB}  )
+
 
 add_executable(TestSpliteFile  example/splitefile.cpp)
 target_link_directories(TestSpliteFile PUBLIC build)

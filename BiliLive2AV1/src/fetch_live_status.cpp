@@ -11,15 +11,13 @@
 #include <string.h>
 #include <rapidjson/pointer.h>
 #include <m3u8fetch.h>
+#include <workflow/WFFacilities.h>
 
 using namespace rapidjson;
 std::deque<LiveHomeStatus> liveroom_list;
 const std::string web_live_status("https://api.live.bilibili.com/room/v1/Room/room_init");
 char *HOME = getenv("HOME");
 std::string default_profile_json = std::string(HOME) + "/.BiliLiveDown.json";
-
-
-
 
 std::vector<M4SVideo> m4slist;
 
@@ -35,10 +33,10 @@ MergeChunkedBody(void *_body, size_t &_body_len)
     auto File = fopen("body.json", "w+");
     do
     {
-        length=0;
+        length = 0;
 
         int ptr = 0;
-        assert(body_chr[0]!='\n');
+        assert(body_chr[0] != '\n');
         do
         {
             char c = body_chr[ptr];
@@ -51,19 +49,19 @@ MergeChunkedBody(void *_body, size_t &_body_len)
 
         } while (ptr < _body_len - TutalLength);
         std::string sv(body_chr, ptr - 2);
-        fprintf(stderr, "\r\n #### Number of length %d  and ptr is %d   ###\r\n", sv.length(),ptr);
+        fprintf(stderr, "\r\n #### Number of length %d  and ptr is %d   ###\r\n", sv.length(), ptr);
         sscanf(sv.c_str(), "%X", &length);
-        fprintf(stderr, "\r\n #### Length is %d ###\r\n",length);
+        fprintf(stderr, "\r\n #### Length is %d ###\r\n", length);
 
         if (length == 0)
             break;
         fprintf(stderr, "\nmove lenth is %d\r\n", length);
-        memmove((void *)((char*)_body+TutalLength), (const void *)body_chr + ptr, length);
+        memmove((void *)((char *)_body + TutalLength), (const void *)body_chr + ptr, length);
         fwrite(body_chr, length, 1, File);
         fflush(File);
 
         // assert(body_chr[0] == '{');
-        body_chr += (length + ptr+2);
+        body_chr += (length + ptr + 2);
         // body_chr+=ptr+length;
         TutalLength += length;
 
@@ -388,8 +386,8 @@ void LivingRoomIndexAnalysis()
             {
                 i.LivingRoomExt = new LivingRoomIndex();
             }
-            LiveHomeStatus * adr = &i;
-            m3u8fetch* m3u8node =  new m3u8fetch(adr);
+            LiveHomeStatus *adr = &i;
+            m3u8fetch *m3u8node = new m3u8fetch(adr);
 
             std::string website;
             website.resize(RoomUrlInfo.size() + 256);
@@ -405,7 +403,7 @@ void LivingRoomIndexAnalysis()
              */
 
             auto Task = WFTaskFactory::create_http_task(website, 5, 2, [&](WFHttpTask *task)
-{
+                                                        {
     if(i.live_status==1){fprintf(stderr,"\r\nRoom %s is Running\r\n");}
     protocol::HttpRequest *req = task->get_req();
     protocol::HttpResponse *resp = task->get_resp();
@@ -465,7 +463,7 @@ void LivingRoomIndexAnalysis()
         int ThunckLen=0;
         if(ThunckFlag==true)
         {
-            ThunckFlag= MergeChunkedBody((void*)body , body_len);
+            size_t len= MergeChunkedBody((void*)body , body_len);
         }
 
         if(flg==false)return;
@@ -538,8 +536,7 @@ void LivingRoomIndexAnalysis()
 
         }
         // i.LivingRoomExt
-        return; 
-        });
+        return; });
             auto req = Task->get_req();
             req->add_header_pair("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.0.0 Safari/537.36 Edg/116.0.1938.62");
             req->add_header_pair("Connection", "close");
@@ -549,16 +546,102 @@ void LivingRoomIndexAnalysis()
     sleep(2);
 }
 
-
 std::string LiveHomeStatus::GetM3u8Url()
 {
     // assert(live_status==1);
-    if(live_status!=1)return std::string();
+    if (live_status != 1)
+        return std::string();
     std::string ret_url;
     // ret_url.resize(this->LivingRoomExt->ExtraUrl.size()*2);
-    ret_url+=this->LivingRoomExt->host;
-    ret_url+=this->LivingRoomExt->BaseUrl;
-    ret_url+=this->LivingRoomExt->ExtraUrl;
-    fprintf(stderr , "u3m8 addr is %s  \n",ret_url.c_str());
+    ret_url += this->LivingRoomExt->host;
+    ret_url += this->LivingRoomExt->BaseUrl;
+    ret_url += this->LivingRoomExt->ExtraUrl;
+    fprintf(stderr, "u3m8 addr is %s  \n", ret_url.c_str());
     return std::move(ret_url);
-    }
+}
+
+constexpr size_t m3u8len = strlen("index.m3u8?");
+
+std::string LiveHomeStatus::GetM4sContent(std::string str)
+{
+    std::string ret;
+    std::stringstream ss;
+    size_t BaseUrl_len = LivingRoomExt->BaseUrl.size();
+    std::string base_url = LivingRoomExt->BaseUrl.substr(0, BaseUrl_len - m3u8len);
+    ret += LivingRoomExt->host + base_url + str + "?" + LivingRoomExt->ExtraUrl;
+    return std::move(ret);
+}
+
+std::string LiveHomeStatus::GetM4sUrl(uint64_t m4s_id)
+{
+    /**
+     * @todo : 从m3u8  string 获取具体地址
+     *
+     */
+    if (LivingRoomExt == nullptr)
+        return std::string();
+    std::stringstream ss;
+    std::string m4s_id_str;
+    ss << m4s_id;
+    ss >> m4s_id_str;
+    return GetM4sContent(m4s_id_str);
+#if 0
+    std::string m4s_id_str;
+    std::stringstream ss;
+    std::string ret;
+    size_t BaseUrl_len = LivingRoomExt->BaseUrl.size();
+    std::string base_url = LivingRoomExt->BaseUrl.substr(0, BaseUrl_len - m3u8len);
+    ss << LivingRoomExt->host << base_url << m4s_id << "?" << LivingRoomExt->ExtraUrl;
+    ss >> ret;
+    return std::move(ret);
+#endif
+}
+
+int FetchHttpBody(const std::string uri, const void **ptr, size_t *len)
+{
+    printf("exec start\n and uri is %s ",uri.c_str());
+    WFFacilities::WaitGroup wg(1);
+    int state = 0;
+    auto task_callback = [&wg, &ptr, &len, &state](WFHttpTask *task)
+    {
+        printf("entry to resp\n");
+        auto req = task->get_req();
+        auto resp = task->get_resp();
+        state = task->get_state();
+        int error = task->get_error();
+
+        switch (state)
+        {
+        case WFT_STATE_SYS_ERROR:
+            fprintf(stderr, "system error: %s\n", strerror(error));
+            break;
+        case WFT_STATE_DNS_ERROR:
+            fprintf(stderr, "DNS error: %s\n", gai_strerror(error));
+            break;
+        case WFT_STATE_SSL_ERROR:
+            fprintf(stderr, "SSL error: %d\n", error);
+            break;
+        case WFT_STATE_TASK_ERROR:
+            fprintf(stderr, "Task error: %d\n", error);
+            break;
+        case WFT_STATE_SUCCESS:
+            break;
+        }
+        if (state != WFT_STATE_SUCCESS)
+        {
+            wg.done();
+            return;
+        }
+        resp->get_parsed_body(ptr, len);
+        void *mem_dest = malloc(*len);
+        mempcpy(mem_dest, *ptr, *len);
+        *ptr = mem_dest;
+        wg.done();
+    };
+
+    auto task = WFTaskFactory::create_http_task(uri, 7, 7, task_callback);
+    task->start();
+    printf("##start\n");
+    wg.wait();
+    return state;
+}

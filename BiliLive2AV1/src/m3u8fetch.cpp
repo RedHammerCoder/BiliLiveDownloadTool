@@ -23,6 +23,16 @@ m3u8fetch::m3u8fetch(LiveHomeStatus *parent) : _Parent(parent), Exec_time(1000),
     RegisterExecutor();
 }
 
+void m3u8fetch::GetHeadfile()
+{
+    /**
+     * @brief 下载headfile 并且存入EXT_X_MAP 长度保存到 EXT_X_MAP_len
+     * 
+     *
+     */
+
+}
+
 void m3u8fetch::RegisterExecutor()
 {
     auto tsk = [&]()
@@ -231,11 +241,10 @@ int m3u8fetch::CreateFetchTask()
                                                      * @todo 获取json信息以后将信息
                                                      *
                                                      */
-                                                    series_of(task)->push_back(WFTaskFactory::create_go_task("parser_m3u8",[=](){
+                                                    series_of(task)->push_back(WFTaskFactory::create_go_task("parser_m3u8", [=]()
+                                                                                                             {
                                                         Parserm3u8((char*)Content , body_len);
-                                                        free(Content);
-                                                    }) )  ;
-                                                  
+                                                        free(Content); }));
                                                 });
 
         protocol::HttpRequest *req = _task->get_req();
@@ -243,4 +252,20 @@ int m3u8fetch::CreateFetchTask()
         req->add_header_pair("User-Agent", "Wget/1.14 (linux-gnu)");
         req->add_header_pair("Connection", "close");
     }
+}
+
+std::deque<m3u8fetch::BlockPair> m3u8fetch::PopFrontM4sList()
+{
+    #ifdef Debug
+    fprintf(stderr , "start to init m4slist");
+    #endif
+    std::deque<BlockPair> retvalue;
+    std::lock_guard list_lock(mtx_m4s);
+    for(auto &&  ref : m4slist)
+    {
+        retvalue.emplace_back(std::make_pair(ref.first , ref.second)  );
+    }
+    m4slist.clear();
+    return std::move(retvalue);
+
 }

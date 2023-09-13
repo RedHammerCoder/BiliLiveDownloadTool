@@ -67,6 +67,9 @@ struct LiveHomeStatus
     bool encrypted;
     LivingRoomIndex *LivingRoomExt = nullptr;
     std::string GetM3u8Url();
+    std::string GetM4sUrl(uint64_t m4s_id);
+    std::string GetM4sContent(std::string header);
+    std::string M4sUrl_mode;
     m3u8fetch *FetchM3u8Node;
 };
 /**
@@ -89,7 +92,6 @@ public:
      *
      * @return * void
      */
-    std::string Getm3u8Url();
     // std::string Getm4sUrl();
 };
 
@@ -136,6 +138,10 @@ extern std::deque<LiveHomeStatus> liveroom_list;
 void LivingRoomIndexAnalysis();
 void Listening_liveroom_init();
 void UpdateRoomListMsg();
+
+int FetchHttpBody(const std::string uri ,const void** ptr , size_t *len);
+
+
 size_t MergeChunkedBody(void *_body, size_t &_body_len);
 
 template <int wait_time, typename EVENT>
