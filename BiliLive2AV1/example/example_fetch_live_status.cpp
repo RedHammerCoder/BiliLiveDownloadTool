@@ -1,11 +1,24 @@
 #include "fetch_live_status.h"
 #include <sys/unistd.h>
+#include <sys/signal.h>
 #include "KExecutor.h"
-void appendtimer( int& len)
-{
 
-    fprintf(stderr,"write file  %d\n",len++);
+
+
+
+bool SigctrlC=false;
+
+WFFacilities::WaitGroup wg(1);
+
+void sigCtrlC(int sig)
+{
+    SigctrlC=true;
+    fprintf(stderr , "sig ctrl c called\n");
+    wg.done();
+
 }
+
+
 int main()
 {
     // FILE * fd =  fopen("timerlog.txt","w+");
@@ -17,9 +30,13 @@ int main()
         sleep(3);
     LivingRoomIndexAnalysis();
     
-    sleep(40);
+    // sleep(40);
     fprintf(stderr , "\nPROGRAMDONE\n");
     // fclose(fd);
+
+    signal(SIGINT,sigCtrlC);
+    wg.wait();
+
 
     return 0;
 }

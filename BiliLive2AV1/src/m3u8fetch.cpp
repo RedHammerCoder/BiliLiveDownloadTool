@@ -37,7 +37,7 @@ void m3u8fetch::RegisterExecutor()
 {
     auto tsk = [&]()
     {
-        fprintf(stderr, " ##  ##  ##register exec------------------\n");
+        // fprintf(stderr, " ##  ##  ##register exec------------------\n");
         this->resetUri();
     };
     KExecutor::SetTask(tsk);
@@ -53,7 +53,7 @@ int m3u8fetch::Parserm3u8(char *ptr, size_t len)
     char *charptr = ptr;
     // printf("BUFF is \n%s  \n", charptr);
     fflush(stdout);
-    fprintf(stderr, charptr);
+    // fprintf(stderr, charptr);
     assert(strncmp(charptr, "#EXTM3U", strlen("#EXTM3U")) == 0);
     charptr = charptr + unusedLen;
     ss << std::string(charptr);
@@ -103,7 +103,7 @@ UpdateM4slist:
             // std::cout<<"\nfind a # EXT_INF"<<std::endl;
             ss >> line;
             sscanf(line.c_str(), "%lld.m4s", &m4sId);
-            fprintf(stderr, "m4s is %lld", m4sId);
+            // fprintf(stderr, "m4s is %lld", m4sId);
             std::cout << "m4s is" << m4sId << ".m4s" << std::endl;
             BLOCK empty;
             empty.first = nullptr;
@@ -111,6 +111,7 @@ UpdateM4slist:
             // auto & [ref , inserOk]= m4slist.try_emplace(m4sId, std::make_pair<void* , size_t>(nullptr,0));
             std::lock_guard LG(mtx_m4s);
             m4slist.try_emplace(m4sId, std::move(empty));
+            // if(*flag)
             continue;
         }
 
@@ -199,7 +200,7 @@ int m3u8fetch::CreateFetchTask()
 
         _task = WFTaskFactory::create_http_task(Url_m3u8, 5, 2, [=](WFHttpTask *task)
                                                 {
-                                                    fprintf(stderr, "----------start to slove m3u8file-----------\n");
+                                                    // fprintf(stderr, "----------start to slove m3u8file-----------\n");
 
                                                     protocol::HttpRequest *req = task->get_req();
                                                     protocol::HttpResponse *resp = task->get_resp();
@@ -229,7 +230,7 @@ int m3u8fetch::CreateFetchTask()
                                                         fprintf(stderr, "Failed. Press Ctrl-C to exit.\n");
                                                         return;
                                                     }
-                                                    fprintf(stderr, "----------start to slove m3u8file---jj--------\n");
+                                                    // fprintf(stderr, "----------start to slove m3u8file---jj--------\n");
                                                     fflush(stderr);
                                                     const void *body = nullptr;
                                                     size_t body_len = 0;
@@ -257,7 +258,7 @@ int m3u8fetch::CreateFetchTask()
 std::deque<m3u8fetch::BlockPair> m3u8fetch::PopFrontM4sList()
 {
     #ifdef Debug
-    fprintf(stderr , "start to init m4slist");
+    // fprintf(stderr , "start to init m4slist");
     #endif
     std::deque<BlockPair> retvalue;
     std::lock_guard list_lock(mtx_m4s);
