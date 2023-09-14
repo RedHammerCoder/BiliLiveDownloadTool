@@ -97,7 +97,11 @@ private:
 
 
 resetURL :
-        free(this->_task);
+        if(_task!=nullptr)
+        {
+                    free(this->_task);
+
+        }
         _task = nullptr;
         try_start();
     }

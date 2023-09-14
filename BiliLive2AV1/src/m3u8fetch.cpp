@@ -24,14 +24,14 @@ void m3u8fetch::GetHeadfile()
 {
     /**
      * @brief 下载headfile 并且存入EXT_X_MAP 长度保存到 EXT_X_MAP_len
-     * 
+     *
      *
      */
-
 }
 
 void m3u8fetch::RegisterExecutor()
 {
+    fprintf(stderr , "m3u8fetch auto task start\n");
     auto tsk = [&]()
     {
         this->resetUri();
@@ -191,8 +191,8 @@ void SymbleSplite::splitbychar(char _chr)
 
 /**
  * @brief 用于获取并解析m3u8文件
- * 
- * @return int 
+ *
+ * @return int
  */
 int m3u8fetch::SetFetchTask()
 {
@@ -243,10 +243,16 @@ int m3u8fetch::SetFetchTask()
                                                      * @todo 获取json信息以后将信息
                                                      *
                                                      */
-                                                    series_of(task)->push_back(WFTaskFactory::create_go_task("parser_m3u8", [=]()
-                                                                                                             {
+                                                    auto gotask_callback = [=](WFGoTask* gotask){
+                                                        fprintf(stderr , "go task call back start \n");
+                                                        this->_Parent->TransUnit->Start();
+                                                    };
+                                                    auto *gotask = WFTaskFactory::create_go_task("parser_m3u8", [=]()
+                                                                                                 {
                                                         Parserm3u8((char*)Content , body_len);
-                                                        free(Content); }));
+                                                        free(Content); });
+                                                        gotask->set_callback(gotask_callback);
+                                                    series_of(task)->push_back(gotask);
                                                 });
 
         protocol::HttpRequest *req = _task->get_req();
@@ -258,16 +264,15 @@ int m3u8fetch::SetFetchTask()
 
 std::deque<m3u8fetch::BlockPair> m3u8fetch::PopFrontM4sList()
 {
-    #ifdef Debug
-    // fprintf(stderr , "start to init m4slist");
-    #endif
+#ifdef Debug
+// fprintf(stderr , "start to init m4slist");
+#endif
     std::deque<BlockPair> retvalue;
     std::lock_guard list_lock(mtx_m4s);
-    for(auto &&  ref : m4slist)
+    for (auto &&ref : m4slist)
     {
-        retvalue.emplace_back(std::make_pair(ref.first , ref.second)  );
+        retvalue.emplace_back(std::make_pair(ref.first, ref.second));
     }
     m4slist.clear();
     return std::move(retvalue);
-
 }

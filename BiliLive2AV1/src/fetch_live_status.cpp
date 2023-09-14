@@ -165,12 +165,9 @@ void fetch_live_status_callback(WFHttpTask *task)
 
 static WFFacilities::WaitGroup wait_group(1);
 
-
-
-
 /**
  * @brief 根据配置文件初始化LiveRoomStatus
-*/
+ */
 void Listening_liveroom_init()
 {
     // auto dir = opendir("~/BLD");
@@ -227,7 +224,7 @@ void Listening_liveroom_init()
     if (Parsed_json.HasMember("defaultpath"))
     {
         std::string defaultpath(Parsed_json["defaultpath"].GetString());
-        fprintf(stderr , "set default path \n");
+        fprintf(stderr, "set default path \n");
         SetDefaultPath(defaultpath);
     }
 
@@ -343,6 +340,10 @@ void UpdateRoomListMsg()
                 fprintf(stderr, "Live Room Status Error , Msg not OK");
                 return;
             }
+            /**
+             * @todo 添加trigger 以便在直播结束的时候执行清除任务
+             *
+             */
             assert(StatusJson["data"].IsObject());
             auto DataObj = StatusJson["data"].GetObject();
             uint64_t RoomId = DataObj["room_id"].GetUint64();
@@ -393,34 +394,188 @@ const std::string RoomUrlInfo = "https://api.live.bilibili.com/xlive/web-room/v2
 
 // void live_room_website_call_back(WFHttpTask *task);
 
-
-
-
 /**
  * @brief 用于更新LiveHomeStatu；
- * 
- * @param LHS 指向需要更新Status的LiveHomeStatus； 
+ *
+ * @param LHS 指向需要更新Status的LiveHomeStatus；
  * @return retvalue==0 表示正常  retvalue==-1 更新出错
  */
-int FreshLiveRoomStatus(LiveHomeStatus* LHS)
+int FreshLiveRoomStatus(LiveHomeStatus *LHS)
 {
-    
+    if (LHS->live_status != 1)
+        return -1;
+    if (LHS->LivingRoomExt == nullptr)
+    {
+        LHS->LivingRoomExt = new LivingRoomIndex();
+    }
+    if (LHS->FetchM3u8Node == nullptr)
+        LHS->FetchM3u8Node = new m3u8fetch(LHS);
+    if (LHS->TransUnit == nullptr)
+        LHS->TransUnit = new m4s2mp4(LHS->FetchM3u8Node, LHS);
+    std::string website;
+    website.resize(RoomUrlInfo.size() + 256);
+    char buff[255];
+    memset(buff, 0, 256);
+    sprintf(buff, "?room_id=%lld&protocol=0,1&format=0,1,2&codec=0,1&qn=10000&platform=h5&ptype=8", LHS->RoomId);
+    website = RoomUrlInfo + buff;
+    auto http_callback = [&](WFHttpTask *task)
+    {
+        fprintf(stderr, "http callback\n");
+        if (LHS->live_status == 1)
+        {
+            fprintf(stderr, "\r\nRoom %s is Running\r\n", LHS->RoomId_chr);
+        }
+        protocol::HttpRequest *req = task->get_req();
+        protocol::HttpResponse *resp = task->get_resp();
+        int state = task->get_state();
+        int error = task->get_error();
+        switch (state)
+        {
+        case WFT_STATE_SYS_ERROR:
+            fprintf(stderr, "system error: %s\n", strerror(error));
+            break;
+        case WFT_STATE_DNS_ERROR:
+            fprintf(stderr, "DNS error: %s\n", gai_strerror(error));
+            break;
+        case WFT_STATE_SSL_ERROR:
+            fprintf(stderr, "SSL error: %d\n", error);
+            break;
+        case WFT_STATE_TASK_ERROR:
+            fprintf(stderr, "Task error: %d\n", error);
+            break;
+        case WFT_STATE_SUCCESS:
+            break;
+        }
 
+        if (state != WFT_STATE_SUCCESS)
+        {
+            fprintf(stderr, "Failed. Press Ctrl-C to exit.\n");
+            return;
+        }
+        // uint64_t RoomId = i.RoomId;
 
+        // fprintf(stderr,"Match TO CURRET ROOM\r\n");
+        auto webref = LHS->LivingRoomExt;
+        const void *body;
+        const void *rawbody;
+        size_t rawbody_len;
+        size_t body_len;
+        // resp->get_raw_body(&rawbody,&rawbody_len);
+        bool flg = resp->get_parsed_body(&body, &body_len);
 
+        // auto rawbodyft  =fopen("rawbody.txt","w+");
+        // fwrite(rawbody, 1, rawbody_len, rawbodyft);
+        // fflush(rawbodyft);
+        // fclose(rawbodyft);
 
+        std::string name, value;
+        protocol::HttpHeaderCursor resp_cursor(resp);
+        bool ThunckFlag = false;
+        while (resp_cursor.next(name, value))
+        {
+            if (strncmp("Transfer-Encoding", name.c_str(), strlen("Transfer-Encoding")) == 0 && strncmp("chunked", value.c_str(), strlen("chunked")) == 0)
+            {
+                size_t len = MergeChunkedBody((void *)body, body_len);
+            }
+        }
+        // int ThunckLen = 0;
+        // if (ThunckFlag == true)
+        // {
+        // }
 
+        if (flg == false)
+            return;
+        // auto FT = fopen("fetch_file.txt", "w+");
+        // // fprintf(stderr,body+5);
+        // fwrite(body, body_len, 1, FT);
+        // fflush(FT);
+        // fclose(FT);
 
+        // fprintf(stderr,"\n###PRINT BODY END  body len is %lld\n",body_len);
+        Document webdesc;
+        webdesc.Parse((const char *)body, body_len);
+        // fprintf(stderr,"\n###PARSER DONE  \r\n  ");
 
+        assert(webdesc.IsObject());
+        // fprintf(stderr , "\nWebDesc is OBJ\n");
+        // fprintf(stderr,"\r\n web dict is  %d \r\n" ,Web_Dict.GetType());
+        /**
+         * @todo 解析webdesc的网站内容并且填充liveroomlist
+         *
+         */
+        auto LiveStream = rapidjson::Pointer("/data/playurl_info/playurl/stream").Get(webdesc);
+        assert(LiveStream->IsArray());
+        // fprintf(stderr,"\nENTRY TO Pointer\n");
+
+        for (auto &Stream : LiveStream->GetArray())
+        {
+            assert(Stream.HasMember("protocol_name"));
+            // fprintf(stderr,"\nASSERT PROTO NAME\n");
+
+            std::string ProtoName = Stream["protocol_name"].GetString();
+            if (strncmp(ProtoName.c_str(), "http_hls", strlen("http_hls")) != 0)
+                continue;
+            for (auto &format : Stream["format"].GetArray())
+            {
+                // fprintf(stderr,"\nENTRY Format name\n");
+                // assert(Stream)
+                auto formatName = format["format_name"].GetString();
+
+                // fprintf(stderr,"\n  formate name is %s\n",formatName);
+
+                if (strncmp(formatName, "fmp4", strlen("fmp4")) != 0)
+                    continue;
+                // fprintf(stderr,"\nCODEC\n");
+
+                for (auto &codeEle : format["codec"].GetArray())
+                {
+                    // fprintf(stderr,"\nENTRY TO CODEC\n");
+                    assert(codeEle["codec_name"].IsString());
+                    auto codecname = codeEle["codec_name"].GetString();
+                    // fprintf(stderr , "codec name is %s \n",codecname);
+                    if (strncmp(codecname, "avc", strlen("avc")) != 0)
+                        continue;
+                    // fprintf(stderr,"\nIn line %s\n",__LINE__);
+                    // fflush(stderr);
+
+                    std::string UrlBase = codeEle["base_url"].GetString();
+                    assert(codeEle["url_info"].IsArray());
+                    auto url_info_t = codeEle["url_info"].GetArray();
+                    auto url_info = url_info_t.Begin()->GetObject();
+                    // fprintf(stderr,"\n######    URLBASE is #####%s###\n",UrlBase.c_str());
+                    LHS->LivingRoomExt->BaseUrl = std::move(UrlBase);
+                    LHS->LivingRoomExt->host = url_info["host"].GetString();
+                    LHS->LivingRoomExt->ExtraUrl = url_info["extra"].GetString();
+                    // fprintf(stderr,"\n######  UNI_URL #####%s###\n",(i.LivingRoomExt->host+i.LivingRoomExt->BaseUrl+i.LivingRoomExt->ExtraUrl).c_str()    );
+                    break;
+                }
+                break;
+            }
+            // sleep(4);
+            break;
+        }
+        // LHS->TransUnit->Start();
+        fprintf(stderr, "Fresh callback end\n");
+        return;
+    };
+    auto Task = WFTaskFactory::create_http_task(website, 5, 2, http_callback);
+    auto req = Task->get_req();
+    req->add_header_pair("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.0.0 Safari/537.36 Edg/116.0.1938.62");
+    req->add_header_pair("Connection", "close");
+    fprintf(stderr , "Task Start\n");
+    Task->start();
+
+    return 0;
 }
 
-
-
-
-
-
-
-
+void LivingRoomIndexAnalysisNew()
+{
+    for (auto &i : liveroom_list)
+    {
+        fprintf(stderr, "loop slove liveroom \n");
+        FreshLiveRoomStatus(&i);
+    }
+}
 
 void LivingRoomIndexAnalysis()
 {
@@ -436,8 +591,8 @@ void LivingRoomIndexAnalysis()
             }
             LiveHomeStatus *adr = &i;
             m3u8fetch *m3u8node = new m3u8fetch(adr);
-            m4s2mp4* Downloader = new m4s2mp4(m3u8node , &i);
-            i.TransUnit=Downloader;
+            m4s2mp4 *Downloader = new m4s2mp4(m3u8node, &i);
+            i.TransUnit = Downloader;
 
             std::string website;
             website.resize(RoomUrlInfo.size() + 256);

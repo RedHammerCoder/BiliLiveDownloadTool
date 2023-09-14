@@ -28,7 +28,7 @@ int main()
     // GetliveStatus("4089850");
     UpdateRoomListMsg();
         sleep(3);
-    LivingRoomIndexAnalysis();
+    LivingRoomIndexAnalysisNew();
     
     // sleep(40);
     fprintf(stderr , "\nPROGRAMDONE\n");

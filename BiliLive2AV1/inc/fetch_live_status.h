@@ -139,7 +139,9 @@ extern std::deque<LiveHomeStatus> liveroom_list;
  * @brief LivingRoomIndexAnalysis用于获取正在直播的livingroom的m3u8 文件
  */
 void LivingRoomIndexAnalysis();
+void LivingRoomIndexAnalysisNew();
 void Listening_liveroom_init();
+int FreshLiveRoomStatus(LiveHomeStatus *LHS);
 void UpdateRoomListMsg();
 
 int FetchHttpBody(const std::string uri ,const void** ptr , size_t *len);
