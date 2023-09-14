@@ -1,5 +1,5 @@
 project(biliLiveDownload)
-cmake_minimum_required(VERSION 3.26)
+cmake_minimum_required(VERSION 3.25)
 set(CMAKE_VERBOSE_MAKEFILE ON)
 
 find_package(workflow REQUIRED )
@@ -9,6 +9,7 @@ if(workflow_FOUND)
     message("FOUND WORKFLOW package")
 else(workflow_FOUND)
     message(FATAL_ERROR "WORKFLOW NOT FOUND")
+    return()
 endif(workflow_FOUND)
 
 
