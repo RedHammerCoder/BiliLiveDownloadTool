@@ -165,6 +165,12 @@ void fetch_live_status_callback(WFHttpTask *task)
 
 static WFFacilities::WaitGroup wait_group(1);
 
+
+
+
+/**
+ * @brief 根据配置文件初始化LiveRoomStatus
+*/
 void Listening_liveroom_init()
 {
     // auto dir = opendir("~/BLD");
@@ -387,6 +393,35 @@ const std::string RoomUrlInfo = "https://api.live.bilibili.com/xlive/web-room/v2
 
 // void live_room_website_call_back(WFHttpTask *task);
 
+
+
+
+/**
+ * @brief 用于更新LiveHomeStatu；
+ * 
+ * @param LHS 指向需要更新Status的LiveHomeStatus； 
+ * @return retvalue==0 表示正常  retvalue==-1 更新出错
+ */
+int FreshLiveRoomStatus(LiveHomeStatus* LHS)
+{
+    
+
+
+
+
+
+
+
+}
+
+
+
+
+
+
+
+
+
 void LivingRoomIndexAnalysis()
 {
     fprintf(stderr, "\r\nEntry to Room ANA\r\n");
@@ -546,12 +581,11 @@ void LivingRoomIndexAnalysis()
 
             }
             // sleep(4);
+            break;
+        }
             Downloader->Start();
 
-            break;
 
-
-        }
         //TODO: m4s2mp4 运行
         // i.LivingRoomExt
         return; });
@@ -561,7 +595,6 @@ void LivingRoomIndexAnalysis()
             Task->start();
         }
     }
-    sleep(2);
 }
 
 std::string LiveHomeStatus::GetM3u8Url()

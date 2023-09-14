@@ -15,10 +15,7 @@ m3u8fetch::m3u8fetch(LiveHomeStatus *parent) : _Parent(parent), Exec_time(1000),
 {
     // FetchM3u8Task = WFTaskFactory::create_http_task()
     fprintf(stderr, "  ### ### ###   m3u8 analysisd");
-    if (_Parent->live_status == 1)
-    {
-        this->CreateFetchTask();
-    }
+    this->SetFetchTask();
     assert(_task != nullptr);
     RegisterExecutor();
 }
@@ -37,7 +34,6 @@ void m3u8fetch::RegisterExecutor()
 {
     auto tsk = [&]()
     {
-        // fprintf(stderr, " ##  ##  ##register exec------------------\n");
         this->resetUri();
     };
     KExecutor::SetTask(tsk);
@@ -193,7 +189,12 @@ void SymbleSplite::splitbychar(char _chr)
     return;
 }
 
-int m3u8fetch::CreateFetchTask()
+/**
+ * @brief 用于获取并解析m3u8文件
+ * 
+ * @return int 
+ */
+int m3u8fetch::SetFetchTask()
 {
     if (_task == nullptr)
     {

@@ -2,6 +2,8 @@
 #include "m3u8fetch.h"
 #include <assert.h>
 #include <atomic>
+#include <sys/stat.h>
+#include <sys/types.h>
 #include <workflow/WFFacilities.h>
 
 std::string Default_Path;
@@ -25,12 +27,42 @@ void m4s2mp4::Start()
     KExecutor::UploadNode();
 }
 
+/**
+ * @brief 用于创建文件夹或检查文件夹已经存在
+ * 
+ * @param path 
+ * @return int retvalue ==0 mean 有文件夹或者文件夹已经创建 其他数值代表异常
+ */
+int TryCreateDir(std::string path)
+{
+recheck:
+    int ret=0;
+    DIR* dir = opendir(path.c_str());
+    if(dir==nullptr){
+        //TODO: create dir
+        mkdir(path.c_str(),S_IRWXU);
+        goto recheck; 
+    }else{
+        return 0;
+    }
+
+}
+
+
 void m4s2mp4::InitFile()
 {
     // if (file == nullptr)
     assert(file==nullptr) ;
     assert(_m4s_filename.size() != 0);
-    std::string Path = Default_Path   + '/' + _m4s_filename;
+    // mkdir(_m4s_dir.c_str(),S_IRWXU);
+    std::string Path = Default_Path +'/'+_m4s_dir;
+    int flag = TryCreateDir(Path);
+    if(flag!=0)
+    {
+        fprintf(stderr , "create dir error \n");
+        return;
+    }
+    Path+='/'+_m4s_filename;
     fprintf(stderr , "file path is %s \n ",Path.c_str());
     file = fopen(Path.c_str(), "w+");
     if(fileno(file)==-1)

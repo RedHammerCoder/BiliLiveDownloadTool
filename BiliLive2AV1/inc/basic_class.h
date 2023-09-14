@@ -66,6 +66,8 @@ private:
     /* data */
     std::mutex mtx_m4s;                                    // if want to modify m4slist , the first thing is get this lock;
     std::map<uint64_t, std::pair<void *, size_t>> m4slist; // uint64_t 保存id
+    
+    
     uint64_t min_m4s_nb;                                   // 保存最小的m4s id from m4slist   所有小于该数值的文件都已经写入存储
     uint64_t Max_m4s_nb;                                   // 保存最大的m4s id from m4slist;  确保获取的m3u8文件下序列号小于等于该数值
     void *EXT_X_MAP;
@@ -85,9 +87,16 @@ private:
         std::string headFile;
 
     } CurrentM3u8file;
-    int CreateFetchTask();
+    int SetFetchTask();
     void resetUri()
     {
+        if(this->_Parent->LivingRoomExt->host.size()==0 && _task==nullptr )
+        {
+            goto resetURL;
+        }
+
+
+resetURL :
         free(this->_task);
         _task = nullptr;
         try_start();
@@ -98,6 +107,7 @@ public:
     // void Getm3u8file();
     void GetHeadfile();
     m3u8fetch(LiveHomeStatus *Parent);
+    
     int try_start()
     {
         if (_Parent->live_status != 1)
@@ -115,7 +125,7 @@ public:
         }
         if (_task == nullptr)
         {
-            CreateFetchTask();
+            SetFetchTask();
         }
         assert(this->_task != nullptr);
         if (_task != nullptr)
