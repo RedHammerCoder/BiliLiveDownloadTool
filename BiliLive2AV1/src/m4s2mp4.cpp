@@ -14,67 +14,83 @@ void SetDefaultPath(std::string Path)
 
 void m4s2mp4::Start()
 {
-    fprintf(stderr ,"#################------------- m4smp4 start\n");
-    InitFile();
+    fprintf(stderr, "#################------------- m4smp4 start\n");
+    if (InitFlag == false)
+    {
+        InitFile();
+        KExecutor::SetTask(_task);
+        KExecutor::UploadNode();
+    }
+
     _task = [&]()
     {
         this->GetM4sList();
         this->AppendMsgBlock();
         fprintf(stderr, "-------##########---------########  append block to disk\n");
     };
-    fprintf(stderr,"ready to update node\n");
-    KExecutor::SetTask(_task);
-    KExecutor::UploadNode();
+    fprintf(stderr, "ready to update node\n");
 }
+
+void m4s2mp4::StartOnce()
+{
+    bool flg = Atmc_Startonce.exchange(true);
+    if(flg==true)return ;
+    if(flg==false)Start();
+
+}
+
+
 
 /**
  * @brief 用于创建文件夹或检查文件夹已经存在
- * 
- * @param path 
+ *
+ * @param path
  * @return int retvalue ==0 mean 有文件夹或者文件夹已经创建 其他数值代表异常
  */
 int TryCreateDir(std::string path)
 {
 recheck:
-    int ret=0;
-    DIR* dir = opendir(path.c_str());
-    if(dir==nullptr){
-        //TODO: create dir
-        mkdir(path.c_str(),S_IRWXU);
-        goto recheck; 
-    }else{
+    int ret = 0;
+    DIR *dir = opendir(path.c_str());
+    if (dir == nullptr)
+    {
+        // TODO: create dir
+        mkdir(path.c_str(), S_IRWXU);
+        goto recheck;
+    }
+    else
+    {
         return 0;
     }
-
 }
-
 
 void m4s2mp4::InitFile()
 {
     // if (file == nullptr)
-    assert(file==nullptr) ;
+    assert(InitFlag == false);
+    assert(file == nullptr);
     assert(_m4s_filename.size() != 0);
     // mkdir(_m4s_dir.c_str(),S_IRWXU);
-    std::string Path = Default_Path +'/'+_m4s_dir;
+    std::string Path = Default_Path + '/' + _m4s_dir;
     int flag = TryCreateDir(Path);
-    if(flag!=0)
+    if (flag != 0)
     {
-        fprintf(stderr , "create dir error \n");
+        fprintf(stderr, "create dir error \n");
         return;
     }
-    Path+='/'+_m4s_filename;
-    fprintf(stderr , "file path is %s \n ",Path.c_str());
+    Path += '/' + _m4s_filename;
+    fprintf(stderr, "file path is %s \n ", Path.c_str());
     file = fopen(Path.c_str(), "w+");
-    if(fileno(file)==-1)
+    if (fileno(file) == -1)
     {
-        fprintf(stderr , "mp4 file open err\n");
+        fprintf(stderr, "mp4 file open err\n");
         exit(-1);
     }
     const void *ptr = nullptr;
     size_t ptr_len = 0;
     std::string m4sheader = this->m3u8list->GetHeaderFileName();
     // fprintf(stderr ,)
-    assert(m4sheader.size()!=0);
+    assert(m4sheader.size() != 0);
     std::string header_url = this->LiveStatus->GetM4sContent(m4sheader);
     int state = FetchHttpBody(header_url, &ptr, &ptr_len);
     if (state != WFT_STATE_SUCCESS)
@@ -82,7 +98,10 @@ void m4s2mp4::InitFile()
         fprintf(stderr, "Get header file error \n");
         return;
     }
-    fwrite(ptr, ptr_len, 1, file);
+    size_t siz= fwrite(ptr, ptr_len, 1, file);
+    fprintf(stderr,"---------ALL WRITE %lld byte   ptr len is %lld\n",siz,ptr_len);
+    fflush(file);
+    InitFlag = true;
 }
 
 void m4s2mp4::GetM4sList()

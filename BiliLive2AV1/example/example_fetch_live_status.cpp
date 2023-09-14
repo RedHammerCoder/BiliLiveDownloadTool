@@ -27,7 +27,7 @@ int main()
     Listening_liveroom_init();
     // GetliveStatus("4089850");
     UpdateRoomListMsg();
-        sleep(3);
+    sleep(3);
     LivingRoomIndexAnalysisNew();
     
     // sleep(40);

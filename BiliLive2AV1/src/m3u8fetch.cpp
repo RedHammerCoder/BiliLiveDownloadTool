@@ -31,7 +31,7 @@ void m3u8fetch::GetHeadfile()
 
 void m3u8fetch::RegisterExecutor()
 {
-    fprintf(stderr , "m3u8fetch auto task start\n");
+    fprintf(stderr, "m3u8fetch auto task start\n");
     auto tsk = [&]()
     {
         this->resetUri();
@@ -196,11 +196,9 @@ void SymbleSplite::splitbychar(char _chr)
  */
 int m3u8fetch::SetFetchTask()
 {
-    if (_task == nullptr)
-    {
-
-        _task = WFTaskFactory::create_http_task(Url_m3u8, 5, 2, [=](WFHttpTask *task)
-                                                {
+    fprintf(stderr , "SetFetchTask\n");
+    _task = WFTaskFactory::create_http_task(Url_m3u8, 5, 2, [=](WFHttpTask *task)
+                                            {
                                                     // fprintf(stderr, "----------start to slove m3u8file-----------\n");
 
                                                     protocol::HttpRequest *req = task->get_req();
@@ -245,21 +243,19 @@ int m3u8fetch::SetFetchTask()
                                                      */
                                                     auto gotask_callback = [=](WFGoTask* gotask){
                                                         fprintf(stderr , "go task call back start \n");
-                                                        this->_Parent->TransUnit->Start();
+                                                        this->_Parent->TransUnit->StartOnce();
                                                     };
                                                     auto *gotask = WFTaskFactory::create_go_task("parser_m3u8", [=]()
                                                                                                  {
                                                         Parserm3u8((char*)Content , body_len);
                                                         free(Content); });
                                                         gotask->set_callback(gotask_callback);
-                                                    series_of(task)->push_back(gotask);
-                                                });
+                                                    series_of(task)->push_back(gotask); });
 
-        protocol::HttpRequest *req = _task->get_req();
-        req->add_header_pair("Accept", "*/*");
-        req->add_header_pair("User-Agent", "Wget/1.14 (linux-gnu)");
-        req->add_header_pair("Connection", "close");
-    }
+    protocol::HttpRequest *req = _task->get_req();
+    req->add_header_pair("Accept", "*/*");
+    req->add_header_pair("User-Agent", "Wget/1.14 (linux-gnu)");
+    req->add_header_pair("Connection", "close");
 }
 
 std::deque<m3u8fetch::BlockPair> m3u8fetch::PopFrontM4sList()

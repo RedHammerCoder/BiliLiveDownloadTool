@@ -9,6 +9,7 @@
 #include <workflow/HttpUtil.h>
 #include <workflow/WFTaskFactory.h>
 #include <workflow/WFFacilities.h>
+#include <atomic>
 
 using BLOCK = std::pair<void *, size_t>;
 
@@ -31,8 +32,8 @@ struct LiveHomeStatus
     std::string GetM4sUrl(uint64_t m4s_id);
     std::string GetM4sContent(std::string header);
     std::string M4sUrl_mode;
-    m3u8fetch *FetchM3u8Node;
-    m4s2mp4* TransUnit;
+    m3u8fetch *FetchM3u8Node=nullptr;
+    m4s2mp4* TransUnit=nullptr;
 };
 
 class LivingRoomIndex
@@ -114,23 +115,27 @@ public:
     
     int try_start()
     {
-        if (_Parent->live_status != 1)
-            return -1;
-        // fprintf(stderr, "m3u8 fetched\n");
+        fprintf(stderr , "Try start\n");
+        // assert(_Parent->live_status==1);        
+        fprintf(stderr, "m3u8 fetched\n");
         if (Url_m3u8.size() == 0)
         {
             Url_m3u8 = std::move(this->_Parent->GetM3u8Url());
-            // fprintf(stderr, "----------########  m3u8 add is %s\n", Url_m3u8.c_str());
+            fprintf(stderr, "----------########  m3u8 add is %s\n", Url_m3u8.c_str());
             if (Url_m3u8.size() == 0)
             {
-                // fprintf(stderr , "get m3 u8 file err---------------------\n");
+                fprintf(stderr , "get m3 u8 file err---------------------\n");
                 return -1;
             }
         }
+        fprintf(stderr , "--------begin Set Fetch Task\n");
+        fflush(stderr);
+
         if (_task == nullptr)
         {
             SetFetchTask();
         }
+        fprintf(stderr , "Set Fetch Task\n");
         assert(this->_task != nullptr);
         if (_task != nullptr)
         {
@@ -151,18 +156,20 @@ class m4s2mp4 : public KExecutor
 {
 private:
     /* data */
+    std::atomic_bool Atmc_Startonce=false;
     std::mutex _m4s_list_mtx;
     std::string _m4s_dir;
     std::string _m4s_filename;
     BLOCK _m4s_head;             // 作为头文件写入存储文件
     std::deque<BLOCK> _m4s_list; // 可以有序写入ssd中间
-    FILE *file;
+    FILE *file=nullptr;
     LiveHomeStatus *LiveStatus;
     m3u8fetch *m3u8list;
     bool LiveisDown; // 直播关闭的时候为true 没有关的时候 false；
     bool Inited;
     void OpenFile();
     std::function<void(void)> _task;
+    bool InitFlag=false;
 
 public:
     m4s2mp4(m3u8fetch *_mu, LiveHomeStatus *LHS) : LiveStatus(LHS), m3u8list(_mu), KExecutor(&Default_ExecutorManager)
@@ -188,6 +195,7 @@ public:
     void SetFilename(std::string name) { _m4s_filename = std::move(name); }
     void SetDirName(std::string Dir) { _m4s_dir = std::move(Dir); }
     void Start();
+    void StartOnce();
     void AppendMsgBlock();
     void GetM4sList();
     void InitFile(); // todo : 初始化file并且将数据插入
