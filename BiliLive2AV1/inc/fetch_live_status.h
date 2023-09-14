@@ -6,22 +6,24 @@
 #include <signal.h>
 #include <netdb.h>
 #include <string>
-#include <workflow/HttpMessage.h>
-#include <workflow/HttpUtil.h>
-#include <workflow/WFTaskFactory.h>
-#include <workflow/WFFacilities.h>
+// #include <workflow/HttpMessage.h>
+// #include <workflow/HttpUtil.h>
+// #include <workflow/WFTaskFactory.h>
+// #include <workflow/WFFacilities.h>
 #include <regex>
 #include <deque>
 #include <assert.h>
 #include <utility>
-
+#include "basic_class.h"
 #include <vector>
 #include <rapidjson/encodings.h>
 #include <rapidjson/document.h>
 
 #include <sys/types.h>
 #include <dirent.h>
+// #include "m4s2mp4.h"
 // #include "m3u8fetch.h"
+
 
 
 /**
@@ -52,7 +54,7 @@
  * @arg /data/live_status 为1的时候开播 为0的时候没有开播
 需要获取 live_time is_locked room_id
  */
-
+#if 0
 class LivingRoomIndex;
 class m3u8fetch;
 struct LiveHomeStatus
@@ -72,6 +74,7 @@ struct LiveHomeStatus
     std::string M4sUrl_mode;
     m3u8fetch *FetchM3u8Node;
 };
+// #endif
 /**
  * @brief 用于保存多种线路信息
  * @name
@@ -94,30 +97,30 @@ public:
      */
     // std::string Getm4sUrl();
 };
-
+#endif
 // using Block = std::pair<void* >;
-using M4sMap = std::pair<std::string , std::pair<void*  , size_t > > ;
-struct M4SVideo{
+// using M4sMap = std::pair<std::string , std::pair<void*  , size_t > > ;
+// struct M4SVideo{
 
-};
-extern std::vector<M4SVideo> m4slist;
+// };
+// extern std::vector<M4SVideo> m4slist;
 
 /**
  * @brief 在新获取的http m3u8 新于当前类的m3u8时候 本类析构并且初始化当前类的M4s列表
  *
  *
  */
-class M3u8Index
-{
-public:
-    M3u8Index() = delete;
-    M3u8Index(std::string head);
-    std::string MediaSeq;
-    std::string HeaderUri;
-    void *UniBlock;
-    size_t len;
-    std::vector<std::string> M4SList;
-};
+// class M3u8Index
+// {
+// public:
+//     M3u8Index() = delete;
+//     M3u8Index(std::string head);
+//     std::string MediaSeq;
+//     std::string HeaderUri;
+//     void *UniBlock;
+//     size_t len;
+//     std::vector<std::string> M4SList;
+// };
 
 extern std::deque<LiveHomeStatus> liveroom_list;
 

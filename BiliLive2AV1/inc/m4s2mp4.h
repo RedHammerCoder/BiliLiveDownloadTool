@@ -13,12 +13,16 @@
 #include "m3u8fetch.h"
 #include <deque>
 #include <functional>
+#include "basic_class.h"
 #include <mutex>
 // using namespace std;
 extern std::string Default_Path;
 
 void SetDefaultPath(std::string);
 
+
+
+#if 0
 class m4s2mp4 : public KExecutor
 {
 private:
@@ -41,7 +45,8 @@ public:
     {//TODO : 初始化开始路径
         SetFilename("file.m4s");
         SetDirName("key725");
-        InitFile();
+        // InitFile();
+    #if 0
         _task = [&](){
             this->GetM4sList();
             this->AppendMsgBlock();
@@ -49,13 +54,21 @@ public:
         };
         KExecutor::SetTask(_task);
         KExecutor::UploadNode();
+    #endif
     };
-    ~m4s2mp4() {}
+    ~m4s2mp4() {
+        fflush(file);
+        fclose(file);
+    }
 
     void SetFilename(std::string name) { _m4s_filename = std::move(name); }
     void SetDirName(std::string Dir) { _m4s_dir = std::move(Dir); }
+    void Start();
     void AppendMsgBlock();
     void GetM4sList();
     void InitFile(); // todo : 初始化file并且将数据插入
     // void TransCodeWrite();//TODO : ffmpeg 解码并写入文件
 };
+
+
+#endif

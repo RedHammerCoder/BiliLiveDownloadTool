@@ -20,7 +20,7 @@ const std::string web_live_status("https://api.live.bilibili.com/room/v1/Room/ro
 char *HOME = getenv("HOME");
 std::string default_profile_json = std::string(HOME) + "/.BiliLiveDown.json";
 
-std::vector<M4SVideo> m4slist;
+// std::vector<M4SVideo> m4slist;
 
 size_t
 MergeChunkedBody(void *_body, size_t &_body_len)
@@ -50,13 +50,13 @@ MergeChunkedBody(void *_body, size_t &_body_len)
 
         } while (ptr < _body_len - TutalLength);
         std::string sv(body_chr, ptr - 2);
-        fprintf(stderr, "\r\n #### Number of length %d  and ptr is %d   ###\r\n", sv.length(), ptr);
+        // fprintf(stderr, "\r\n #### Number of length %d  and ptr is %d   ###\r\n", sv.length(), ptr);
         sscanf(sv.c_str(), "%X", &length);
-        fprintf(stderr, "\r\n #### Length is %d ###\r\n", length);
+        // fprintf(stderr, "\r\n #### Length is %d ###\r\n", length);
 
         if (length == 0)
             break;
-        fprintf(stderr, "\nmove lenth is %d\r\n", length);
+        // fprintf(stderr, "\nmove lenth is %d\r\n", length);
         memmove((void *)((char *)_body + TutalLength), (const void *)body_chr + ptr, length);
         fwrite(body_chr, length, 1, File);
         fflush(File);
@@ -115,13 +115,13 @@ void fetch_live_status_callback(WFHttpTask *task)
         return;
     }
     auto uri = req->get_request_uri();
-    fprintf(stderr, "entry to req_resp\r\n");
+    // fprintf(stderr, "entry to req_resp\r\n");
     size_t Uri_len = strlen(uri);
     resp->get_parsed_body(&body, &body_len);
-    fprintf(stderr, "@@ body size is %ld\r\n", body_len);
+    // fprintf(stderr, "@@ body size is %ld\r\n", body_len);
     fwrite(body, 1, body_len, stderr);
     fflush(stderr);
-    fprintf(stderr, "http req web URI  %s   %d \r\n", uri, Uri_len);
+    // fprintf(stderr, "http req web URI  %s   %d \r\n", uri, Uri_len);
 
     /**
      * @todo parsering message from body with json formates
@@ -138,7 +138,7 @@ void fetch_live_status_callback(WFHttpTask *task)
     }
     assert(StatusJson["msg"].IsString());
     const char *msg(StatusJson["msg"].GetString());
-    fprintf(stderr, "Msg Status is  %s", msg);
+    // fprintf(stderr, "Msg Status is  %s", msg);
     if (strncmp(msg, "ok", 2) != 0)
     {
         fprintf(stderr, "Live Room Status Error , Msg not OK");
@@ -221,6 +221,7 @@ void Listening_liveroom_init()
     if (Parsed_json.HasMember("defaultpath"))
     {
         std::string defaultpath(Parsed_json["defaultpath"].GetString());
+        fprintf(stderr , "set default path \n");
         SetDefaultPath(defaultpath);
     }
 
@@ -400,6 +401,8 @@ void LivingRoomIndexAnalysis()
             }
             LiveHomeStatus *adr = &i;
             m3u8fetch *m3u8node = new m3u8fetch(adr);
+            m4s2mp4* Downloader = new m4s2mp4(m3u8node , &i);
+            i.TransUnit=Downloader;
 
             std::string website;
             website.resize(RoomUrlInfo.size() + 256);
@@ -452,13 +455,13 @@ void LivingRoomIndexAnalysis()
         const void* rawbody;
         size_t rawbody_len;
         size_t body_len;
-        resp->get_raw_body(&rawbody,&rawbody_len);
+        // resp->get_raw_body(&rawbody,&rawbody_len);
         bool flg= resp->get_parsed_body( &body,&body_len);
 
-        auto rawbodyft  =fopen("rawbody.txt","w+");
-        fwrite(rawbody, 1, rawbody_len, rawbodyft);
-        fflush(rawbodyft);
-        fclose(rawbodyft);
+        // auto rawbodyft  =fopen("rawbody.txt","w+");
+        // fwrite(rawbody, 1, rawbody_len, rawbodyft);
+        // fflush(rawbodyft);
+        // fclose(rawbodyft);
 
         std::string name , value;
         protocol::HttpHeaderCursor resp_cursor(resp);
@@ -484,7 +487,7 @@ void LivingRoomIndexAnalysis()
         fflush(FT);
         fclose(FT);
 
-        fprintf(stderr,"\n###PRINT BODY END  body len is %lld\n",body_len);
+        // fprintf(stderr,"\n###PRINT BODY END  body len is %lld\n",body_len);
         Document webdesc;
         webdesc.Parse((const char*)body,body_len);
         // fprintf(stderr,"\n###PARSER DONE  \r\n  ");
@@ -498,32 +501,32 @@ void LivingRoomIndexAnalysis()
          */
         auto  LiveStream = rapidjson::Pointer("/data/playurl_info/playurl/stream").Get(webdesc);
         assert(LiveStream->IsArray());
-        fprintf(stderr,"\nENTRY TO Pointer\n");
+        // fprintf(stderr,"\nENTRY TO Pointer\n");
 
         for(auto  & Stream : LiveStream->GetArray() )
         {
             assert(Stream.HasMember("protocol_name"));
-            fprintf(stderr,"\nASSERT PROTO NAME\n");
+            // fprintf(stderr,"\nASSERT PROTO NAME\n");
 
             std::string ProtoName =  Stream["protocol_name"].GetString();
             if(strncmp(ProtoName.c_str(),"http_hls",strlen("http_hls"))!=0)continue;
             for(auto & format : Stream["format"].GetArray())
             {
-                fprintf(stderr,"\nENTRY Format name\n");
+                // fprintf(stderr,"\nENTRY Format name\n");
                 // assert(Stream)
                 auto formatName =  format["format_name"].GetString();
 
-                fprintf(stderr,"\n  formate name is %s\n",formatName);
+                // fprintf(stderr,"\n  formate name is %s\n",formatName);
 
                 if(strncmp(formatName  ,"fmp4",strlen("fmp4"))!=0)continue;
-                fprintf(stderr,"\nCODEC\n");
+                // fprintf(stderr,"\nCODEC\n");
                 
                 for(auto & codeEle : format["codec"].GetArray())
                 {
-                    fprintf(stderr,"\nENTRY TO CODEC\n");
+                    // fprintf(stderr,"\nENTRY TO CODEC\n");
                     assert(codeEle["codec_name"].IsString());
                     auto codecname = codeEle["codec_name"].GetString();
-                    fprintf(stderr , "codec name is %s \n",codecname);
+                    // fprintf(stderr , "codec name is %s \n",codecname);
                     if(strncmp(codecname,"avc",strlen("avc"))!=0)continue;
                     // fprintf(stderr,"\nIn line %s\n",__LINE__);
                     // fflush(stderr);
@@ -532,20 +535,24 @@ void LivingRoomIndexAnalysis()
                     assert(codeEle["url_info"].IsArray());
                     auto url_info_t = codeEle["url_info"].GetArray();
                     auto url_info = url_info_t.Begin()->GetObject();
-                    fprintf(stderr,"\n######    URLBASE is #####%s###\n",UrlBase.c_str());
+                    // fprintf(stderr,"\n######    URLBASE is #####%s###\n",UrlBase.c_str());
                     i.LivingRoomExt->BaseUrl=std::move(UrlBase);
                     i.LivingRoomExt->host=url_info["host"].GetString();
                     i.LivingRoomExt->ExtraUrl=url_info["extra"].GetString();
-                    fprintf(stderr,"\n######  UNI_URL #####%s###\n",(i.LivingRoomExt->host+i.LivingRoomExt->BaseUrl+i.LivingRoomExt->ExtraUrl).c_str()    );
+                    // fprintf(stderr,"\n######  UNI_URL #####%s###\n",(i.LivingRoomExt->host+i.LivingRoomExt->BaseUrl+i.LivingRoomExt->ExtraUrl).c_str()    );
                     break;
                 }
                 break;
 
             }
+            // sleep(4);
+            Downloader->Start();
+
             break;
 
 
         }
+        //TODO: m4s2mp4 运行
         // i.LivingRoomExt
         return; });
             auto req = Task->get_req();
@@ -567,7 +574,7 @@ std::string LiveHomeStatus::GetM3u8Url()
     ret_url += this->LivingRoomExt->host;
     ret_url += this->LivingRoomExt->BaseUrl;
     ret_url += this->LivingRoomExt->ExtraUrl;
-    fprintf(stderr, "u3m8 addr is %s  \n", ret_url.c_str());
+    // fprintf(stderr, "u3m8 addr is %s  \n", ret_url.c_str());
     return std::move(ret_url);
 }
 

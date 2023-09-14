@@ -5,6 +5,7 @@
 #include <string>
 #include <utility>
 #include <mutex>
+#include "basic_class.h"
 #include "KExecutor.h"
 #include <string_view>
 #include <deque>
@@ -22,7 +23,7 @@
 47187621.m4s
  *
  */
-using BLOCK = std::pair<void *, size_t>;
+// using BLOCK = std::pair<void *, size_t>;
 
 class SymbleSplite
 {
@@ -48,6 +49,7 @@ public:
     std::vector<std::string_view> result_list;
 };
 
+#if 0
 class m3u8fetch : public KExecutor
 {
 public:
@@ -95,11 +97,11 @@ public:
     {
         if (_Parent->live_status != 1)
             return -1;
-        fprintf(stderr, "m3u8 fetched\n");
+        // fprintf(stderr, "m3u8 fetched\n");
         if (Url_m3u8.size() == 0)
         {
             Url_m3u8 = std::move(this->_Parent->GetM3u8Url());
-            fprintf(stderr, "----------########  m3u8 add is %s\n", Url_m3u8.c_str());
+            // fprintf(stderr, "----------########  m3u8 add is %s\n", Url_m3u8.c_str());
             if (Url_m3u8.size() == 0)
             {
                 // fprintf(stderr , "get m3 u8 file err---------------------\n");
@@ -113,7 +115,7 @@ public:
         assert(this->_task != nullptr);
         if (_task != nullptr)
         {
-            fprintf(stderr, "------------m3u8 http start-----------\n");
+            // fprintf(stderr, "------------m3u8 http start-----------\n");
             this->_task->start();
             return 0;
         }
@@ -125,3 +127,4 @@ public:
 
     ~m3u8fetch() = default;
 };
+#endif
