@@ -482,11 +482,6 @@ int FreshLiveRoomStatus(LiveHomeStatus *LHS)
         // resp->get_raw_body(&rawbody,&rawbody_len);
         bool flg = resp->get_parsed_body(&body, &body_len);
 
-        // auto rawbodyft  =fopen("rawbody.txt","w+");
-        // fwrite(rawbody, 1, rawbody_len, rawbodyft);
-        // fflush(rawbodyft);
-        // fclose(rawbodyft);
-
         std::string name, value;
         protocol::HttpHeaderCursor resp_cursor(resp);
         bool ThunckFlag = false;
@@ -497,20 +492,6 @@ int FreshLiveRoomStatus(LiveHomeStatus *LHS)
                 size_t len = MergeChunkedBody((void *)body, body_len);
             }
         }
-        // int ThunckLen = 0;
-        // if (ThunckFlag == true)
-        // {
-        // }
-
-        // if (flg == false)
-        //     return;
-        // auto FT = fopen("fetch_file.txt", "w+");
-        // // fprintf(stderr,body+5);
-        // fwrite(body, body_len, 1, FT);
-        // fflush(FT);
-        // fclose(FT);
-
-        // fprintf(stderr,"\n###PRINT BODY END  body len is %lld\n",body_len);
         Document webdesc;
         webdesc.Parse((const char *)body, body_len);
         // fprintf(stderr,"\n###PARSER DONE  \r\n  ");
@@ -585,6 +566,7 @@ int FreshLiveRoomStatus(LiveHomeStatus *LHS)
     fprintf(stderr, "Task Start\n");
     Task->start();
 
+
     return 0;
 }
 
@@ -596,10 +578,10 @@ void LivingRoomIndexAnalysisNew()
         fprintf(stderr , "##__ todo fresh\n");
         if(i.live_status!=1)
         {
-            fprintf(stderr , "\nLIve ERROR  ----------------------------------------\n");
+            // fprintf(stderr , "\nLIve ERROR  ----------------------------------------\n");
             exit(-2);
         }
-        fprintf(stderr,"--------------ggggggggggggggg------------------\n");
+        // fprintf(stderr,"--------------ggggggggggggggg------------------\n");
         int id = FreshLiveRoomStatus(&i);
         if(id==-1)
         {
@@ -820,7 +802,7 @@ std::string LiveHomeStatus::GetM4sUrl(uint64_t m4s_id)
         return std::string();
     std::stringstream ss;
     std::string m4s_id_str;
-    ss << m4s_id;
+    ss << m4s_id<<".m4s";
     ss >> m4s_id_str;
     return GetM4sContent(m4s_id_str);
 #if 0

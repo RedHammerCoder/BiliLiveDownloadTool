@@ -36,6 +36,7 @@ int main()
 
     });
     gotask->start();
-    sleep(2);
 
+    sleep(2);
+    gotask->start();
 }

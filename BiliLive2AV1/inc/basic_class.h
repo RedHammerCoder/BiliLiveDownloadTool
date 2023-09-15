@@ -88,26 +88,29 @@ private:
         std::string headFile;
 
     } CurrentM3u8file;
-    int SetFetchTask();
+    
     void resetUri()
     {
-        if(this->_Parent->LivingRoomExt->host.size()==0 && _task==nullptr )
-        {
-            goto resetURL;
-        }
-
-
-resetURL :
         if(_task!=nullptr)
         {
-                    free(this->_task);
-
+            this->free_task();
         }
-        _task = nullptr;
-        try_start();
+        if (Url_m3u8.size() == 0)
+        {
+            Url_m3u8 = std::move(this->_Parent->GetM3u8Url());
+            fprintf(stderr, "----------########  m3u8 add is %s\n", Url_m3u8.c_str());
+            if (Url_m3u8.size() == 0)
+            {
+                fprintf(stderr , "get m3 u8 file err---------------------\n");
+                return;
+            }
+        }
+
     }
 
 public:
+    int SetFetchTask();
+    void free_task(){assert(this->_task!=nullptr); free(_task);}
     std::string GetHeaderFileName(){return CurrentM3u8file.headFile;}
     // void Getm3u8file();
     void GetHeadfile();
@@ -131,18 +134,16 @@ public:
         fprintf(stderr , "--------begin Set Fetch Task\n");
         fflush(stderr);
 
-        if (_task == nullptr)
-        {
-            SetFetchTask();
-        }
-        fprintf(stderr , "Set Fetch Task\n");
-        assert(this->_task != nullptr);
         if (_task != nullptr)
         {
-            // fprintf(stderr, "------------m3u8 http start-----------\n");
-            this->_task->start();
-            return 0;
+            this->free_task();
         }
+        this->SetFetchTask();
+        fprintf(stderr , "Set Fetch Task\n");
+        // assert(this->_task != nullptr);
+            // fprintf(stderr, "------------m3u8 http start-----------\n");
+            // this->_task->start();
+            return 0;
     }
     // int updatem3u8list();//@todo : 更新m3u8文件列表
     int Parserm3u8(char *, size_t); // 解析m3u8文件并且

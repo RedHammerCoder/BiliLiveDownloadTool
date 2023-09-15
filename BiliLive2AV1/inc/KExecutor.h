@@ -40,8 +40,10 @@ class ExecutorManager
                     fprintf(stderr , "saved obj is deleted\n");
                     continue;}//保管对象已经删除
                 //todo : 保管对象没有删除时候
+                fprintf(stderr , "Node Ready TO exec\n");
                 (*(node.second.lock()).get())();//执行node的代码
-                                    fprintf(stderr , "Node exec\n");
+                fprintf(stderr , "Node execd\n");
+
 
 
             }
@@ -90,9 +92,12 @@ private:
     }
     void UploadNode()
     {
-        fprintf(stderr , "____________  upload node --------------");
+        fprintf(stderr , "____________  upload node --------------\n");
         ID = _manager->uploadNode(_Task);
 
+    }
+    void SwapNode()
+    {
     }
     virtual ~KExecutor(){}
 };

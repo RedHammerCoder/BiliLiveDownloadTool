@@ -5,6 +5,7 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <workflow/WFFacilities.h>
+#include <iostream>
 
 std::string Default_Path;
 void SetDefaultPath(std::string Path)
@@ -15,6 +16,16 @@ void SetDefaultPath(std::string Path)
 void m4s2mp4::Start()
 {
     fprintf(stderr, "#################------------- m4smp4 start\n");
+
+    _task = [=]()
+    {
+        fprintf(stderr, "###----m4s2mp4 ERROR\n");
+        fflush(stderr);
+        this->GetM4sList();
+        this->AppendMsgBlock();
+        fprintf(stderr, "-------##########---------########  append block to disk\n");
+    };
+
     if (InitFlag == false)
     {
         InitFile();
@@ -22,24 +33,19 @@ void m4s2mp4::Start()
         KExecutor::UploadNode();
     }
 
-    _task = [&]()
-    {
-        this->GetM4sList();
-        this->AppendMsgBlock();
-        fprintf(stderr, "-------##########---------########  append block to disk\n");
-    };
     fprintf(stderr, "ready to update node\n");
 }
 
 void m4s2mp4::StartOnce()
 {
     bool flg = Atmc_Startonce.exchange(true);
-    if(flg==true)return ;
-    if(flg==false)Start();
-
+    if (flg == true){
+        fprintf(stderr , "exit from startonce\n");
+        return;
+    };
+        
+    Start();
 }
-
-
 
 /**
  * @brief 用于创建文件夹或检查文件夹已经存在
@@ -98,21 +104,22 @@ void m4s2mp4::InitFile()
         fprintf(stderr, "Get header file error \n");
         return;
     }
-    size_t siz= fwrite(ptr, ptr_len, 1, file);
-    fprintf(stderr,"---------ALL WRITE %lld byte   ptr len is %lld\n",siz,ptr_len);
+    size_t siz = fwrite(ptr, ptr_len, 1, file);
+    fprintf(stderr, "---------ALL WRITE %lld byte   ptr len is %lld\n", siz, ptr_len);
     fflush(file);
     InitFlag = true;
 }
 
 void m4s2mp4::GetM4sList()
 {
+    fprintf(stderr , "entry to Getm4slist\n");
     assert(this->m3u8list != nullptr);
     std::lock_guard _m4s_list_mtx_lock(_m4s_list_mtx);
     // std::lock_guard _m3u8list_lock(m3u8list.)
     std::deque<m3u8fetch::BlockPair> m4slist;
     m4slist = this->m3u8list->PopFrontM4sList();
 
-    std::atomic_int64_t RemainTask_nb; // 用于记录正在执行的http req数目
+    std::atomic_int64_t RemainTask_nb=0; // 用于记录正在执行的http req数目
 
     WFFacilities::WaitGroup wg(1);
     for (auto &ref : m4slist)
@@ -127,9 +134,11 @@ void m4s2mp4::GetM4sList()
         uint64_t m4sId = ref.first;
 
         std::string URL = LiveStatus->GetM4sUrl(m4sId);
+        std::cout<<URL<<std::endl;
+        fprintf(stderr , "M4s URL : %\n",URL.c_str());
         auto http_callback = [&wg, &RemainTask_nb, &Kvalue](WFHttpTask *task)
         {
-            fprintf(stderr, "start to fetch m4sdoc");
+            fprintf(stderr, "start to fetch m4sdoc\n");
             auto req = task->get_req();
             auto resp = task->get_resp();
             int state = task->get_state();
@@ -169,6 +178,8 @@ void m4s2mp4::GetM4sList()
             void *body = nullptr;
             size_t body_len = 0;
             resp->get_parsed_body((const void **)&body, &body_len);
+            fprintf(stderr , "Block Size is %zu \n",body_len);
+
             if (ThunckFlag == true)
             {
                 size_t len = MergeChunkedBody(body, body_len);
@@ -180,15 +191,19 @@ void m4s2mp4::GetM4sList()
             Kvalue.second = body_len;
             // 获取http数据后唤醒主线程
             uint64_t val = RemainTask_nb.fetch_sub(1);
-            if (val == 1)
-            {
-                fprintf(stderr, "#### fetch m4s Video loop done  \n");
-                wg.done();
-            }
+
+            // if (val == 1)
+            // {
+            //     fprintf(stderr, "#### fetch m4s Video loop done  \n");
+            //     wg.done();
+            // }
         };
-        WFTaskFactory::create_http_task(URL, 5, 2, http_callback);
+        WFTaskFactory::create_http_task(URL, 5, 2, http_callback)->start();
+        
+
     }
-    wg.wait();
+    // wg.wait();
+    sleep(4);
     // TODO: 将获取的m4s list 插入 _m4s_list
     for (auto &ref : m4slist)
     {
@@ -198,7 +213,7 @@ void m4s2mp4::GetM4sList()
 
 void m4s2mp4::AppendMsgBlock()
 {
-    assert(Inited == true);
+    assert(InitFlag == true);
     BLOCK blk;
     std::lock_guard mtx(_m4s_list_mtx);
     while (true)
@@ -208,6 +223,8 @@ void m4s2mp4::AppendMsgBlock()
         blk = _m4s_list.front();
         _m4s_list.pop_front();
         auto &[ptr, len] = blk;
+        fprintf(stderr , "Block len : %d",blk);
         fwrite(ptr, len, 1, file);
+        fflush(file);
     }
 }

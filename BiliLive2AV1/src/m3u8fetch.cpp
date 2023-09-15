@@ -32,9 +32,18 @@ void m3u8fetch::GetHeadfile()
 void m3u8fetch::RegisterExecutor()
 {
     fprintf(stderr, "m3u8fetch auto task start\n");
-    auto tsk = [&]()
+    this->resetUri();
+    auto tsk = [=]()
     {
-        this->resetUri();
+        // TODO 获取m3u8文件
+        fprintf(stderr, "m3u8 http task start\n");
+        if (this->_task != nullptr)
+        {
+            this->free_task();
+            
+        }
+        this->SetFetchTask();
+        this->_task->start();
     };
     KExecutor::SetTask(tsk);
     UploadNode();
@@ -60,7 +69,7 @@ int m3u8fetch::Parserm3u8(char *ptr, size_t len)
     std::cout << "\n seq  id is " << SeqId << std::endl;
 
 #ifdef Debug
-    goto UpdateM4slist;
+    // goto UpdateM4slist;
 #endif
     if (SeqId < CurrentM3u8file.SeqId)
         return -1;
@@ -130,7 +139,7 @@ UpdateM4slist:
             }
             std::string headfile(buffs);
             CurrentM3u8file.headFile = std::move(headfile);
-            printf("BUFFis%s", buffs);
+            printf("BUFFis%s\n", buffs);
             continue;
         }
     }
@@ -196,7 +205,7 @@ void SymbleSplite::splitbychar(char _chr)
  */
 int m3u8fetch::SetFetchTask()
 {
-    fprintf(stderr , "SetFetchTask\n");
+    fprintf(stderr, "SetFetchTask\n");
     _task = WFTaskFactory::create_http_task(Url_m3u8, 5, 2, [=](WFHttpTask *task)
                                             {
                                                     // fprintf(stderr, "----------start to slove m3u8file-----------\n");
@@ -237,21 +246,31 @@ int m3u8fetch::SetFetchTask()
                                                     void *Content = malloc(body_len);
                                                     assert(body_len != 0);
                                                     mempcpy(Content, body, body_len);
+                                                    Parserm3u8((char*)Content , body_len);
+                                                    free(Content);
+                                                    fprintf(stderr , "stop at parser m3u8 URL");
+                                                    this->_Parent->TransUnit->StartOnce();
                                                     /**
                                                      * @todo 获取json信息以后将信息
                                                      *
                                                      */
-                                                    auto gotask_callback = [=](WFGoTask* gotask){
-                                                        fprintf(stderr , "go task call back start \n");
-                                                        this->_Parent->TransUnit->StartOnce();
-                                                    };
+                                                    // auto gotask_callback = [=](WFGoTask* gotask){
+                                                    //     fprintf(stderr , "go task call back start \n");
+                                                    //     this->_Parent->TransUnit->StartOnce();
+                                                    // };
+                                                    #if 0
                                                     auto *gotask = WFTaskFactory::create_go_task("parser_m3u8", [=]()
                                                                                                  {
                                                         Parserm3u8((char*)Content , body_len);
-                                                        free(Content); });
-                                                        gotask->set_callback(gotask_callback);
-                                                    series_of(task)->push_back(gotask); });
-
+                                                        free(Content); 
+                                                        fprintf(stderr , "go task call back start \n");
+                                                        this->_Parent->TransUnit->StartOnce();
+                                                        
+                                                        });
+                                                    #endif
+                                                        // gotask->set_callback(gotask_callback);
+                                                    });
+    // TODO: create go task and append to httptask;
     protocol::HttpRequest *req = _task->get_req();
     req->add_header_pair("Accept", "*/*");
     req->add_header_pair("User-Agent", "Wget/1.14 (linux-gnu)");
