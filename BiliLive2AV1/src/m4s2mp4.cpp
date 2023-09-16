@@ -22,6 +22,7 @@ void m4s2mp4::Start()
         fprintf(stderr, "###----m4s2mp4 ERROR\n");
         fflush(stderr);
         this->GetM4sList();
+        fprintf(stderr , "append msg start\n");
         this->AppendMsgBlock();
         fprintf(stderr, "-------##########---------########  append block to disk\n");
     };
@@ -123,6 +124,8 @@ void m4s2mp4::GetM4sList()
     std::atomic_int64_t RemainTask_nb=0; // 用于记录正在执行的http req数目
 
     WFFacilities::WaitGroup wg(1);
+    std::deque<WFHttpTask*> freelist;
+
     for (auto &ref : m4slist)
     {
         /**
@@ -135,8 +138,10 @@ void m4s2mp4::GetM4sList()
         uint64_t m4sId = ref.first;
 
         std::string URL = LiveStatus->GetM4sUrl(m4sId);
-        std::cout<<URL<<std::endl;
+        // std::cout<<URL<<std::endl;
         // fprintf(stderr , "M4s URL : %\n",URL.c_str());
+        // WFFacilities::WaitGroup wg(1);
+
         auto http_callback = [&wg, &RemainTask_nb, &Kvalue](WFHttpTask *task)
         {
             fprintf(stderr, "start to fetch m4sdoc\n");
@@ -180,7 +185,6 @@ void m4s2mp4::GetM4sList()
             size_t body_len = 0;
             resp->get_parsed_body((const void **)&body, &body_len);
             fprintf(stderr , "Block Size is %zu \n",body_len);
-
             if (ThunckFlag == true)
             {
                 size_t len = MergeChunkedBody(body, body_len);
@@ -199,13 +203,18 @@ void m4s2mp4::GetM4sList()
             //     wg.done();
             // }
         };
-        WFTaskFactory::create_http_task(URL, 5, 2, http_callback)->start();
+        auto refx = WFTaskFactory::create_http_task(URL, 5, 2, http_callback);
+        // freelist.push_back(refx);
+        refx->start();
         
+
 
     }
     // wg.wait();
     sleep(5);
+    fprintf(stderr , "push back to _m4s_list_\n");
     // TODO: 将获取的m4s list 插入 _m4s_list
+
     for (auto &ref : m4slist)
     {
         auto& [ptr , len] = ref.second;
@@ -224,6 +233,10 @@ void m4s2mp4::GetM4sList()
         }
         _m4s_list.push_back(std::move(ref.second));
     }
+    for(auto xx : freelist)
+    {
+        // free(xx);
+    }
 }
 
 void m4s2mp4::AppendMsgBlock()
@@ -239,6 +252,10 @@ void m4s2mp4::AppendMsgBlock()
         _m4s_list.pop_front();
         auto &[ptr, len] = blk;
         // fprintf(stderr , "Block len : %d",blk);
+        if(ptr==nullptr)
+        {
+            exit(-2);
+        }
         fwrite(ptr, len, 1, file);
         fflush(file);
         free(ptr);

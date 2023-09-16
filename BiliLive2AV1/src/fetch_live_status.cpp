@@ -863,5 +863,6 @@ int FetchHttpBody(const std::string uri, const void **ptr, size_t *len)
     task->start();
     printf("##start\n");
     wg.wait();
+    free(task);
     return state;
 }

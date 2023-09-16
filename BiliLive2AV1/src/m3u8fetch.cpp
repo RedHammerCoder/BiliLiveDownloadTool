@@ -1,4 +1,5 @@
 #include "m3u8fetch.h"
+#include "basic_class.h"
 #include <string_view>
 #include <string.h>
 #include <sstream>
@@ -37,10 +38,17 @@ void m3u8fetch::RegisterExecutor()
     auto tsk = [=]()
     {
         // TODO 获取m3u8文件
+        this->resetUri();
         fprintf(stderr, "m3u8 http task start\n");
+        if (this->Url_m3u8.size() == 0)
+        {
+            return;
+        }
         this->free_task();
-        this->SetFetchTask();
+        int ret = this->SetFetchTask();
+        if(ret==-1)return;//url没有初始化
         this->_task->start();
+        sleep(3);
     };
     KExecutor::SetTask(tsk);
     UploadNode();
@@ -88,6 +96,7 @@ int m3u8fetch::Parserm3u8(char *ptr, size_t len)
         CurrentM3u8file.FileSize = len;
         goto UpdateM4slist;
     }
+    return 0;
     /**
      * @todo 循环处理  查找所有m4s文件并获取int数值
      *
@@ -202,77 +211,71 @@ void SymbleSplite::splitbychar(char _chr)
  */
 int m3u8fetch::SetFetchTask()
 {
-    fprintf(stderr, "SetFetchTask\n");
     this->free_task();
-        _task = WFTaskFactory::create_http_task(Url_m3u8, 5, 2, [=](WFHttpTask *task)
-                                            {
-                                                // fprintf(stderr, "----------start to slove m3u8file-----------\n");
+    fprintf(stderr, "SetFetchTask\n");
+    if(Url_m3u8.size()==0)return -1;
 
-                                                protocol::HttpRequest *req = task->get_req();
-                                                protocol::HttpResponse *resp = task->get_resp();
-                                                int state = task->get_state();
-                                                int error = task->get_error();
+    auto Ktask = WFTaskFactory::create_http_task(Url_m3u8, 5, 2, [&](WFHttpTask *task)
+                                                 {
+                                                     // fprintf(stderr, "----------start to slove m3u8file-----------\n");
 
-                                                switch (state)
-                                                {
-                                                case WFT_STATE_SYS_ERROR:
-                                                    fprintf(stderr, "system error: %s\n", strerror(error));
-                                                    break;
-                                                case WFT_STATE_DNS_ERROR:
-                                                    fprintf(stderr, "DNS error: %s\n", gai_strerror(error));
-                                                    break;
-                                                case WFT_STATE_SSL_ERROR:
-                                                    fprintf(stderr, "SSL error: %d\n", error);
-                                                    break;
-                                                case WFT_STATE_TASK_ERROR:
-                                                    fprintf(stderr, "Task error: %d\n", error);
-                                                    break;
-                                                case WFT_STATE_SUCCESS:
-                                                    break;
-                                                }
+                                                     protocol::HttpRequest *req = task->get_req();
+                                                     protocol::HttpResponse *resp = task->get_resp();
+                                                     int state = task->get_state();
+                                                     int error = task->get_error();
 
-                                                if (state != WFT_STATE_SUCCESS)
-                                                {
-                                                    fprintf(stderr, "Failed. Press Ctrl-C to exit.\n");
-                                                    return;
-                                                }
-                                                // fprintf(stderr, "----------start to slove m3u8file---jj--------\n");
-                                                fflush(stderr);
-                                                const void *body = nullptr;
-                                                size_t body_len = 0;
-                                                resp->get_parsed_body(&body, &body_len);
-                                                void *Content = malloc(body_len);
-                                                assert(body_len != 0);
-                                                mempcpy(Content, body, body_len);
-                                                Parserm3u8((char *)Content, body_len);
-                                                free(Content);
-                                                fprintf(stderr, "stop at parser m3u8 URL");
-                                                this->_Parent->TransUnit->StartOnce();
-/**
- * @todo 获取json信息以后将信息
- *
- */
-// auto gotask_callback = [=](WFGoTask* gotask){
-//     fprintf(stderr , "go task call back start \n");
-//     this->_Parent->TransUnit->StartOnce();
-// };
-#if 0
-                                                    auto *gotask = WFTaskFactory::create_go_task("parser_m3u8", [=]()
-                                                                                                 {
-                                                        Parserm3u8((char*)Content , body_len);
-                                                        free(Content); 
-                                                        fprintf(stderr , "go task call back start \n");
-                                                        this->_Parent->TransUnit->StartOnce();
-                                                        
-                                                        });
-#endif
-                                                // gotask->set_callback(gotask_callback);
-                                            });
+                                                     switch (state)
+                                                     {
+                                                     case WFT_STATE_SYS_ERROR:
+                                                         fprintf(stderr, "system error: %s\n", strerror(error));
+                                                         break;
+                                                     case WFT_STATE_DNS_ERROR:
+                                                         fprintf(stderr, "DNS error: %s\n", gai_strerror(error));
+                                                         break;
+                                                     case WFT_STATE_SSL_ERROR:
+                                                         fprintf(stderr, "SSL error: %d\n", error);
+                                                         break;
+                                                     case WFT_STATE_TASK_ERROR:
+                                                         fprintf(stderr, "Task error: %d\n", error);
+                                                         break;
+                                                     case WFT_STATE_SUCCESS:
+                                                         break;
+                                                     }
+
+                                                     if (state != WFT_STATE_SUCCESS)
+                                                     {
+                                                         fprintf(stderr, "Failed. Press Ctrl-C to exit.\n");
+                                                         return;
+                                                     }
+                                                     // fprintf(stderr, "----------start to slove m3u8file---jj--------\n");
+                                                     fflush(stderr);
+                                                     const void *body = nullptr;
+                                                     size_t body_len = 0;
+                                                     resp->get_parsed_body(&body, &body_len);
+                                                     void *Content = malloc(body_len);
+                                                     assert(body_len != 0);
+                                                     mempcpy(Content, body, body_len);
+                                                     Parserm3u8((char *)Content, body_len);
+                                                     free(Content);
+                                                     fprintf(stderr, "stop at parser m3u8 URL");
+                                                     this->_Parent->TransUnit->StartOnce();
+                                                     /**
+                                                      * @todo 获取json信息以后将信息
+                                                      *
+                                                      */
+
+                                                     // gotask->set_callback(gotask_callback);
+                                                 });
     // TODO: create go task and append to httptask;
-    protocol::HttpRequest *req = _task->get_req();
+    fprintf(stderr, "Finish create http Task \n");
+
+    protocol::HttpRequest *req = Ktask->get_req();
+    // fprintf(stderr , "Finish create http Task \n");
+    fflush(stderr);
     req->add_header_pair("Accept", "*/*");
     req->add_header_pair("User-Agent", "Wget/1.14 (linux-gnu)");
     req->add_header_pair("Connection", "close");
+    _task = Ktask;
 }
 
 std::deque<m3u8fetch::BlockPair> m3u8fetch::PopFrontM4sList()

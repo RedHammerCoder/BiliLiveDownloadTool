@@ -61,8 +61,10 @@ set(CMAKE_CXX_STANDARD 17)
 
 add_library( Bili_Live_Download_CORE SHARED ${Bili_Live_Download} )
 message("entry to lib ")
+# -fstack-protect-all
 # set_target_properties(Bili_Live_Download_CORE PROPERTIES  CMAKE_CXX_STANDARD 17)
 set_property(TARGET Bili_Live_Download_CORE PROPERTY CXX_STANDARD 20 )
+add_compile_options(-fstack-protector)
 target_include_directories(Bili_Live_Download_CORE PUBLIC ${Bili_Live_Download_Header})
 target_link_libraries( Bili_Live_Download_CORE  ${WORKFLOW_LIB})
 message("exit from entry")

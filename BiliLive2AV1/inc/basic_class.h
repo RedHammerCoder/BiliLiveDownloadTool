@@ -15,10 +15,13 @@ using BLOCK = std::pair<void *, size_t>;
 class LivingRoomIndex;
 class m3u8fetch;
 class m4s2mp4;
+class LiveHomeStatus;
 
-struct LiveHomeStatus
+class LiveHomeStatus
 {
+public:
     uint64_t live_time;
+    std::string Tubername; // 用于文件夹命名
     char RoomId_chr[32] = {0};
     std::string RoomHostName; // used to fill host name  ; like "key725" "战鹰"，，parsed by json file
     uint64_t RoomId;
@@ -84,13 +87,9 @@ private:
         std::string headFile;
 
     } CurrentM3u8file;
-
+public:
     void resetUri()
     {
-        if (_task != nullptr)
-        {
-            this->free_task();
-        }
         if (Url_m3u8.size() == 0)
         {
             Url_m3u8 = std::move(this->_Parent->GetM3u8Url());
@@ -102,45 +101,30 @@ private:
             }
         }
     }
-
-public:
     int SetFetchTask();
     void free_task()
     {
         // assert(this->_task != nullptr);
-        if (_task != nullptr)
-        {
-            free(_task);
-        }
+        auto ref = _task;
         _task = nullptr;
+        if(ref==nullptr)return;
+        // free(ref);
     }
+    // _task = nullptr;
     std::string GetHeaderFileName() { return CurrentM3u8file.headFile; }
     // void Getm3u8file();
     void GetHeadfile();
     m3u8fetch(LiveHomeStatus *Parent);
-
     int try_start()
     {
+
         fprintf(stderr, "Try start\n");
         // assert(_Parent->live_status==1);
         fprintf(stderr, "m3u8 fetched\n");
-        if (Url_m3u8.size() == 0)
-        {
-            Url_m3u8 = std::move(this->_Parent->GetM3u8Url());
-            // fprintf(stderr, "----------########  m3u8 add is %s\n", Url_m3u8.c_str());
-            if (Url_m3u8.size() == 0)
-            {
-                fprintf(stderr, "get m3 u8 file err---------------------\n");
-                return -1;
-            }
-        }
+        this->resetUri();
         fprintf(stderr, "--------begin Set Fetch Task\n");
         fflush(stderr);
-
-        if (_task != nullptr)
-        {
-            this->free_task();
-        }
+        return 0;
         this->SetFetchTask();
         fprintf(stderr, "Set Fetch Task\n");
         // assert(this->_task != nullptr);
@@ -153,7 +137,10 @@ public:
     void RegisterExecutor();
     std::deque<BlockPair> PopFrontM4sList();
 
-    ~m3u8fetch() = default;
+    ~m3u8fetch(){
+        fprintf(stderr , "m3u8fetch destry \n");
+        exit(-1);
+    }
 };
 
 class m4s2mp4 : public KExecutor
