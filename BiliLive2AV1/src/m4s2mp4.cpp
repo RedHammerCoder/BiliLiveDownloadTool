@@ -107,6 +107,7 @@ void m4s2mp4::InitFile()
     size_t siz = fwrite(ptr, ptr_len, 1, file);
     fprintf(stderr, "---------ALL WRITE %lld byte   ptr len is %lld\n", siz, ptr_len);
     fflush(file);
+    free((void*)ptr);
     InitFlag = true;
 }
 
@@ -135,7 +136,7 @@ void m4s2mp4::GetM4sList()
 
         std::string URL = LiveStatus->GetM4sUrl(m4sId);
         std::cout<<URL<<std::endl;
-        fprintf(stderr , "M4s URL : %\n",URL.c_str());
+        // fprintf(stderr , "M4s URL : %\n",URL.c_str());
         auto http_callback = [&wg, &RemainTask_nb, &Kvalue](WFHttpTask *task)
         {
             fprintf(stderr, "start to fetch m4sdoc\n");
@@ -203,10 +204,24 @@ void m4s2mp4::GetM4sList()
 
     }
     // wg.wait();
-    sleep(4);
+    sleep(5);
     // TODO: 将获取的m4s list 插入 _m4s_list
     for (auto &ref : m4slist)
     {
+        auto& [ptr , len] = ref.second;
+        if(ptr==nullptr && 0==len)
+        {
+            std::string URL = LiveStatus->GetM4sUrl(ref.first);
+            int state=-1;
+            do
+            {
+                state=FetchHttpBody(URL,(const void**)&ptr,&len);
+                fprintf(stderr , "RE fetch worklist ID : %zu , len :%zu \n",ref.first,len);
+                /* code */
+            } while (state!=WFT_STATE_SUCCESS);
+            
+
+        }
         _m4s_list.push_back(std::move(ref.second));
     }
 }
@@ -223,8 +238,9 @@ void m4s2mp4::AppendMsgBlock()
         blk = _m4s_list.front();
         _m4s_list.pop_front();
         auto &[ptr, len] = blk;
-        fprintf(stderr , "Block len : %d",blk);
+        // fprintf(stderr , "Block len : %d",blk);
         fwrite(ptr, len, 1, file);
         fflush(file);
+        free(ptr);
     }
 }

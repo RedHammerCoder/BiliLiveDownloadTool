@@ -3,7 +3,6 @@
 #include "KExecutor.h"
 #include <deque>
 
-
 #include <workflow/WFTask.h>
 #include <workflow/HttpMessage.h>
 #include <workflow/HttpUtil.h>
@@ -32,8 +31,8 @@ struct LiveHomeStatus
     std::string GetM4sUrl(uint64_t m4s_id);
     std::string GetM4sContent(std::string header);
     std::string M4sUrl_mode;
-    m3u8fetch *FetchM3u8Node=nullptr;
-    m4s2mp4* TransUnit=nullptr;
+    m3u8fetch *FetchM3u8Node = nullptr;
+    m4s2mp4 *TransUnit = nullptr;
 };
 
 class LivingRoomIndex
@@ -55,22 +54,19 @@ public:
     // std::string Getm4sUrl();
 };
 
-
 class m3u8fetch : public KExecutor
 {
 public:
     // using BlockPair = decltype(*(m4slist.begin()));
-    using BlockPair = std::pair<uint64_t,std::pair<void *, size_t>>;
-
+    using BlockPair = std::pair<uint64_t, std::pair<void *, size_t>>;
 
 private:
     /* data */
     std::mutex mtx_m4s;                                    // if want to modify m4slist , the first thing is get this lock;
     std::map<uint64_t, std::pair<void *, size_t>> m4slist; // uint64_t 保存id
-    
-    
-    uint64_t min_m4s_nb;                                   // 保存最小的m4s id from m4slist   所有小于该数值的文件都已经写入存储
-    uint64_t Max_m4s_nb;                                   // 保存最大的m4s id from m4slist;  确保获取的m3u8文件下序列号小于等于该数值
+
+    uint64_t min_m4s_nb; // 保存最小的m4s id from m4slist   所有小于该数值的文件都已经写入存储
+    uint64_t Max_m4s_nb; // 保存最大的m4s id from m4slist;  确保获取的m3u8文件下序列号小于等于该数值
     void *EXT_X_MAP;
     char *EXT_X_MAP_NAME;
     size_t EXT_X_MAP_len;
@@ -88,50 +84,57 @@ private:
         std::string headFile;
 
     } CurrentM3u8file;
-    
+
     void resetUri()
     {
-        if(_task!=nullptr)
+        if (_task != nullptr)
         {
             this->free_task();
         }
         if (Url_m3u8.size() == 0)
         {
             Url_m3u8 = std::move(this->_Parent->GetM3u8Url());
-            fprintf(stderr, "----------########  m3u8 add is %s\n", Url_m3u8.c_str());
+            // fprintf(stderr, "----------########  m3u8 add is %s\n", Url_m3u8.c_str());
             if (Url_m3u8.size() == 0)
             {
-                fprintf(stderr , "get m3 u8 file err---------------------\n");
+                fprintf(stderr, "get m3 u8 file err---------------------\n");
                 return;
             }
         }
-
     }
 
 public:
     int SetFetchTask();
-    void free_task(){assert(this->_task!=nullptr); free(_task);}
-    std::string GetHeaderFileName(){return CurrentM3u8file.headFile;}
+    void free_task()
+    {
+        // assert(this->_task != nullptr);
+        if (_task != nullptr)
+        {
+            free(_task);
+        }
+        _task = nullptr;
+    }
+    std::string GetHeaderFileName() { return CurrentM3u8file.headFile; }
     // void Getm3u8file();
     void GetHeadfile();
     m3u8fetch(LiveHomeStatus *Parent);
-    
+
     int try_start()
     {
-        fprintf(stderr , "Try start\n");
-        // assert(_Parent->live_status==1);        
+        fprintf(stderr, "Try start\n");
+        // assert(_Parent->live_status==1);
         fprintf(stderr, "m3u8 fetched\n");
         if (Url_m3u8.size() == 0)
         {
             Url_m3u8 = std::move(this->_Parent->GetM3u8Url());
-            fprintf(stderr, "----------########  m3u8 add is %s\n", Url_m3u8.c_str());
+            // fprintf(stderr, "----------########  m3u8 add is %s\n", Url_m3u8.c_str());
             if (Url_m3u8.size() == 0)
             {
-                fprintf(stderr , "get m3 u8 file err---------------------\n");
+                fprintf(stderr, "get m3 u8 file err---------------------\n");
                 return -1;
             }
         }
-        fprintf(stderr , "--------begin Set Fetch Task\n");
+        fprintf(stderr, "--------begin Set Fetch Task\n");
         fflush(stderr);
 
         if (_task != nullptr)
@@ -139,11 +142,11 @@ public:
             this->free_task();
         }
         this->SetFetchTask();
-        fprintf(stderr , "Set Fetch Task\n");
+        fprintf(stderr, "Set Fetch Task\n");
         // assert(this->_task != nullptr);
-            // fprintf(stderr, "------------m3u8 http start-----------\n");
-            // this->_task->start();
-            return 0;
+        // fprintf(stderr, "------------m3u8 http start-----------\n");
+        // this->_task->start();
+        return 0;
     }
     // int updatem3u8list();//@todo : 更新m3u8文件列表
     int Parserm3u8(char *, size_t); // 解析m3u8文件并且
@@ -157,28 +160,28 @@ class m4s2mp4 : public KExecutor
 {
 private:
     /* data */
-    std::atomic_bool Atmc_Startonce=false;
+    std::atomic_bool Atmc_Startonce = false;
     std::mutex _m4s_list_mtx;
     std::string _m4s_dir;
     std::string _m4s_filename;
     BLOCK _m4s_head;             // 作为头文件写入存储文件
     std::deque<BLOCK> _m4s_list; // 可以有序写入ssd中间
-    FILE *file=nullptr;
+    FILE *file = nullptr;
     LiveHomeStatus *LiveStatus;
     m3u8fetch *m3u8list;
     bool LiveisDown; // 直播关闭的时候为true 没有关的时候 false；
     bool Inited;
     void OpenFile();
     std::function<void(void)> _task;
-    bool InitFlag=false;
+    bool InitFlag = false;
 
 public:
     m4s2mp4(m3u8fetch *_mu, LiveHomeStatus *LHS) : LiveStatus(LHS), m3u8list(_mu), KExecutor(&Default_ExecutorManager)
-    {//TODO : 初始化开始路径
+    { // TODO : 初始化开始路径
         SetFilename("file.m4s");
         SetDirName("key725");
         // InitFile();
-    #if 0
+#if 0
         _task = [&](){
             this->GetM4sList();
             this->AppendMsgBlock();
@@ -186,9 +189,10 @@ public:
         };
         KExecutor::SetTask(_task);
         KExecutor::UploadNode();
-    #endif
+#endif
     };
-    ~m4s2mp4() {
+    ~m4s2mp4()
+    {
         fflush(file);
         fclose(file);
     }
@@ -202,6 +206,3 @@ public:
     void InitFile(); // todo : 初始化file并且将数据插入
     // void TransCodeWrite();//TODO : ffmpeg 解码并写入文件
 };
-
-
-
