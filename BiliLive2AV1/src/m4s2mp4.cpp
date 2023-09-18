@@ -249,7 +249,7 @@ void m4s2mp4::AppendMsgBlock()
 {
     assert(InitFlag == true);
     BLOCK blk;
-    std::lock_guard mtx(_m4s_list_mtx);
+    // std::lock_guard mtx(_m4s_list_mtx);
     while (true)
     {
         if (_m4s_list.size() == 0)

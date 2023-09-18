@@ -42,7 +42,8 @@ void m3u8fetch::RegisterExecutor()
         }
         this->free_task();
         int ret = this->SetFetchTask();
-        if(ret==-1)return;//url没有初始化
+        if (ret == -1)
+            return; // url没有初始化
         this->_task->start();
         // sleep(3);
     };
@@ -60,13 +61,12 @@ int m3u8fetch::Parserm3u8(char *ptr, size_t len)
     // printf("BUFF is \n%s  \n", charptr);
     fflush(stdout);
     // fprintf(stderr, charptr);
-    if(strncmp(charptr, "#EXTM3U", strlen("#EXTM3U")) != 0)
+    if (strncmp(charptr, "#EXTM3U", strlen("#EXTM3U")) != 0)
     {
-        fprintf(stderr , "u3m8 Error  \n");
-        fwrite((void*)ptr,len,1,ERRLOG.Handle );
+        fprintf(stderr, "u3m8 Error  \n");
+        fwrite((void *)ptr, len, 1, ERRLOG.Handle);
         fflush(ERRLOG.Handle);
         return -1;
-
     }
 
     charptr = charptr + unusedLen;
@@ -110,7 +110,7 @@ int m3u8fetch::Parserm3u8(char *ptr, size_t len)
      *
      */
 UpdateM4slist:
-
+    std::lock_guard LG(mtx_m4s);
     uint64_t m4sId = 0;
     while (ss >> line)
     {
@@ -122,14 +122,14 @@ UpdateM4slist:
             // std::cout<<"\nfind a # EXT_INF"<<std::endl;
             ss >> line;
             sscanf(line.c_str(), "%lld.m4s", &m4sId);
-            this->Max_m4s_nb=(this->Max_m4s_nb>m4sId?this->Max_m4s_nb:m4sId);
+            this->Max_m4s_nb = (this->Max_m4s_nb > m4sId ? this->Max_m4s_nb : m4sId);
             // fprintf(stderr, "m4s is %lld", m4sId);
             std::cout << "m4s is" << m4sId << ".m4s" << std::endl;
             BLOCK empty;
             empty.first = nullptr;
             empty.second = 0;
             // auto & [ref , inserOk]= m4slist.try_emplace(m4sId, std::make_pair<void* , size_t>(nullptr,0));
-            std::lock_guard LG(mtx_m4s);
+
             m4slist.try_emplace(m4sId, std::move(empty));
             // if(*flag)
             continue;
@@ -212,7 +212,6 @@ void SymbleSplite::splitbychar(char _chr)
     return;
 }
 
-
 #endif
 /**
  * @brief 用于获取并解析m3u8文件
@@ -223,7 +222,8 @@ int m3u8fetch::SetFetchTask()
 {
     this->free_task();
     fprintf(stderr, "SetFetchTask\n");
-    if(Url_m3u8.size()==0)return -1;
+    if (Url_m3u8.size() == 0)
+        return -1;
 
     auto Ktask = WFTaskFactory::create_http_task(Url_m3u8, 5, 2, [&](WFHttpTask *task)
                                                  {
@@ -265,9 +265,10 @@ int m3u8fetch::SetFetchTask()
                                                      void *Content = malloc(body_len);
                                                      assert(body_len != 0);
                                                      mempcpy(Content, body, body_len);
-                                                     int kid= Parserm3u8((char *)Content, body_len);
+                                                     int kid = Parserm3u8((char *)Content, body_len);
                                                      free(Content);
-                                                     if(kid==-1)return;
+                                                     if (kid == -1)
+                                                         return;
                                                      fprintf(stderr, "stop at parser m3u8 URL");
                                                      this->_Parent->TransUnit->StartOnce();
                                                      /**
