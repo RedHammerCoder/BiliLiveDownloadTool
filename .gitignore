@@ -5,4 +5,5 @@ tmp/*
 BiliLive2AV1/build/*
 .vscode/
 Test/*
+BiliLive2AV1/body.json
 touch/*

@@ -25,11 +25,6 @@ m3u8fetch::m3u8fetch(LiveHomeStatus *parent) : _Parent(parent), Exec_time(1000),
 
 void m3u8fetch::GetHeadfile()
 {
-    /**
-     * @brief 下载headfile 并且存入EXT_X_MAP 长度保存到 EXT_X_MAP_len
-     *
-     *
-     */
 }
 
 void m3u8fetch::RegisterExecutor()

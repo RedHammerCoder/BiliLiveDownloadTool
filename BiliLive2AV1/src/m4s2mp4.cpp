@@ -243,10 +243,6 @@ void m4s2mp4::GetM4sList()
         }
         _m4s_list.push_back(std::move(ref.second));
     }
-    for(auto xx : freelist)
-    {
-        // free(xx);
-    }
 }
 
 void m4s2mp4::AppendMsgBlock()
