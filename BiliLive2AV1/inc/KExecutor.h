@@ -12,6 +12,10 @@
 #include <mutex>
 class KExecutor;
 using ExecNode = std::function<void(void)>;
+
+
+
+// template <int Timer> 
 class ExecutorManager
 {
     /**
@@ -25,7 +29,6 @@ class ExecutorManager
     bool execflag;
     std::map<int64_t , std::weak_ptr<ExecNode> > TaskMap;
     ExecNode _startNode;
-
     public :
         void _start()
     {
@@ -43,13 +46,9 @@ class ExecutorManager
                 fprintf(stderr , "Node Ready TO exec\n");
                 (*(node.second.lock()).get())();//执行node的代码
                 fprintf(stderr , "Node execd\n");
-
-
-
             }
             sleep(4);
         }
-        
     }
     ExecutorManager():execflag(true)
     {
@@ -74,6 +73,7 @@ class ExecutorManager
     }
 } ;
 extern ExecutorManager Default_ExecutorManager;
+// extern ExecutorManager<3> m3u8fetchManager;
 
 class KExecutor
 {
@@ -81,6 +81,7 @@ private:
     // std::function<void(void)> _Task;
     std::shared_ptr<ExecNode> _Task; 
     int ID;
+
     ExecutorManager* _manager;
 
     public:

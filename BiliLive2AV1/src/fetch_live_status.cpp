@@ -287,11 +287,18 @@ void GetliveStatus(const char *Liveaddr)
 
 void UpdateRoomListMsg()
 {
+    SyncBarrier syncB;
+    // syncB.dispath
 
     for (auto &RoomMsg : liveroom_list)
     {
-        auto task_callback = [&](WFHttpTask *task)
+        fprintf(stderr, "start to dispath\n");
+        // auto kak= syncB.dispath();
+        auto task_callback = [ &syncB  ,&RoomMsg](WFHttpTask *task)
         {
+            // sleep(3);
+            Dispath disp  =syncB.dispath();
+            fprintf(stderr , "echo back\n");
             protocol::HttpRequest *req = task->get_req();
             protocol::HttpResponse *resp = task->get_resp();
             int state = task->get_state();
@@ -401,15 +408,19 @@ void UpdateRoomListMsg()
         req->add_header_pair("Accept", "*/*");
         req->add_header_pair("User-Agent", "Mozilla/5.0");
         req->add_header_pair("Connection", "close");
+        fprintf(stderr, "end to dispath\n");
         task->start();
         /**
          * @todo : 添加强制性检查 ； 保证所有task都完成后才返回
          *
          */
         // fprintf(stderr, "Upate RoomList\n");
+       
     }
-    sleep(6);
+    sleep(3);
+    syncB.wait();
     fprintf(stderr, "Exit from Update Room list\n");
+    
 
     return;
 }

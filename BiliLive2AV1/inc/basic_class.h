@@ -1,8 +1,9 @@
 #pragma once
 #include <string>
 #include "KExecutor.h"
+#include "SyncBarrier.h"
 #include <deque>
-
+#include "ErrorLog.h"
 #include <workflow/WFTask.h>
 #include <workflow/HttpMessage.h>
 #include <workflow/HttpUtil.h>
@@ -11,6 +12,8 @@
 #include <atomic>
 #include <ctime>
 #include <chrono>
+
+// using namespace ParallelCtrl;
 
 using BLOCK = std::pair<void *, size_t>;
 

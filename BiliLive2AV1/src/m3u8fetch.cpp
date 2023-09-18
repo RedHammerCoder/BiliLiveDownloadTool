@@ -1,4 +1,4 @@
-#include "m3u8fetch.h"
+// #include "m3u8fetch.h"
 #include "basic_class.h"
 #include <string_view>
 #include <string.h>
@@ -6,6 +6,7 @@
 #include <thread>
 #include <iostream>
 #include <memory>
+#include "ErrorLog.h"
 
 constexpr size_t unusedLen = strlen("#EXTM3U\n#EXT-X-VERSION:7\n#EXT-X-START:TIME-OFFSET=0\n");
 constexpr int TargDurLen = strlen("#EXT-X-TARGETDURATION");
@@ -35,7 +36,7 @@ void m3u8fetch::RegisterExecutor()
 {
     fprintf(stderr, "m3u8fetch auto task start\n");
     this->resetUri();
-    auto tsk = [=]()
+    auto tsk = [&]()
     {
         // TODO 获取m3u8文件
         this->resetUri();
@@ -64,7 +65,15 @@ int m3u8fetch::Parserm3u8(char *ptr, size_t len)
     // printf("BUFF is \n%s  \n", charptr);
     fflush(stdout);
     // fprintf(stderr, charptr);
-    assert(strncmp(charptr, "#EXTM3U", strlen("#EXTM3U")) == 0);
+    if(strncmp(charptr, "#EXTM3U", strlen("#EXTM3U")) != 0)
+    {
+        fprintf(stderr , "u3m8 Error  \n");
+        fwrite((void*)ptr,len,1,ERRLOG.Handle );
+        fflush(ERRLOG.Handle);
+        return -1;
+
+    }
+
     charptr = charptr + unusedLen;
     ss << std::string(charptr);
     // printf("BUFF is \n%s  \n",charptr);
@@ -72,6 +81,10 @@ int m3u8fetch::Parserm3u8(char *ptr, size_t len)
     uint64_t SeqId = 0;
     sscanf(line.c_str(), "#EXT-X-MEDIA-SEQUENCE:%lld", &SeqId);
     std::cout << "\n seq  id is " << SeqId << std::endl;
+    // if(SeqId>this->Max_m4s_nb)
+    // {
+    //     fprintf(ERRLOG.Handle,"m3u8 fetch too slow at %s video room once\n",this->_Parent->RoomName.c_str());
+    // }
 
 #ifdef Debug
     // goto UpdateM4slist;
@@ -114,6 +127,7 @@ UpdateM4slist:
             // std::cout<<"\nfind a # EXT_INF"<<std::endl;
             ss >> line;
             sscanf(line.c_str(), "%lld.m4s", &m4sId);
+            this->Max_m4s_nb=(this->Max_m4s_nb>m4sId?this->Max_m4s_nb:m4sId);
             // fprintf(stderr, "m4s is %lld", m4sId);
             std::cout << "m4s is" << m4sId << ".m4s" << std::endl;
             BLOCK empty;
@@ -163,7 +177,6 @@ void m3u8fetch::TaskM3u8Fetch()
         return;
     std::string M3u8Url = this->_Parent->GetM3u8Url();
 }
-#endif
 
 size_t SymbleSplite::GetLine()
 {
@@ -204,6 +217,8 @@ void SymbleSplite::splitbychar(char _chr)
     return;
 }
 
+
+#endif
 /**
  * @brief 用于获取并解析m3u8文件
  *
@@ -255,8 +270,9 @@ int m3u8fetch::SetFetchTask()
                                                      void *Content = malloc(body_len);
                                                      assert(body_len != 0);
                                                      mempcpy(Content, body, body_len);
-                                                     Parserm3u8((char *)Content, body_len);
+                                                     int kid= Parserm3u8((char *)Content, body_len);
                                                      free(Content);
+                                                     if(kid==-1)return;
                                                      fprintf(stderr, "stop at parser m3u8 URL");
                                                      this->_Parent->TransUnit->StartOnce();
                                                      /**

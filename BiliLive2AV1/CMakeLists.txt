@@ -24,6 +24,8 @@ set(
     src/m3u8fetch.cpp
     src/KExecutor.cpp
     src/m4s2mp4.cpp
+    src/SyncBarrier.cpp
+    src/Instance.cpp
 )
 
 

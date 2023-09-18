@@ -1,5 +1,5 @@
 #include "m4s2mp4.h"
-#include "m3u8fetch.h"
+// #include "m3u8fetch.h"
 #include <assert.h>
 #include <atomic>
 #include <sys/stat.h>
@@ -126,6 +126,7 @@ void m4s2mp4::GetM4sList()
 
     WFFacilities::WaitGroup wg(1);
     std::deque<WFHttpTask*> freelist;
+    SyncBarrier fs;
 
     for (auto &ref : m4slist)
     {
@@ -137,14 +138,21 @@ void m4s2mp4::GetM4sList()
         RemainTask_nb.fetch_add(1);
         auto &Kvalue = ref.second;
         uint64_t m4sId = ref.first;
+        auto disp = fs.dispath();
 
         std::string URL = LiveStatus->GetM4sUrl(m4sId);
         // std::cout<<URL<<std::endl;
         // fprintf(stderr , "M4s URL : %\n",URL.c_str());
         // WFFacilities::WaitGroup wg(1);
 
-        auto http_callback = [&wg, &RemainTask_nb, &Kvalue](WFHttpTask *task)
+        auto http_callback = [  = , &Kvalue , dic{disp} ](WFHttpTask *task)
         {
+            // auto dic = disp;
+            assert(dic.IsSecurt()==false);
+            // dic.Destroy();
+            // assert(disp.IsSecurt()==true);
+
+            // auto tmp = fs.dispath();
             fprintf(stderr, "start to fetch m4sdoc\n");
             auto req = task->get_req();
             auto resp = task->get_resp();
@@ -196,7 +204,6 @@ void m4s2mp4::GetM4sList()
             Kvalue.first = act_body;
             Kvalue.second = body_len;
             // 获取http数据后唤醒主线程
-            uint64_t val = RemainTask_nb.fetch_sub(1);
 
             // if (val == 1)
             // {
@@ -205,15 +212,17 @@ void m4s2mp4::GetM4sList()
             // }
         };
         auto refx = WFTaskFactory::create_http_task(URL, 5, 2, http_callback);
+        assert(disp.IsSecurt()==true);
+        // disp.Destroy();
         // freelist.push_back(refx);
         refx->start();
-        
-
-
+    
     }
     // wg.wait();
-    sleep(5);
-    fprintf(stderr , "push back to _m4s_list_\n");
+    // sleep(5);
+    fprintf( stderr , "ready to wait \n");
+    fs.wait();
+    fprintf(stderr , "-=-----------------------------------------push back to _m4s_list_\n");
     // TODO: 将获取的m4s list 插入 _m4s_list
 
     for (auto &ref : m4slist)
