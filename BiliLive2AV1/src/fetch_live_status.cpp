@@ -605,11 +605,11 @@ void LivingRoomIndexAnalysisNew()
     for (auto &i : liveroom_list)
     {
         fprintf(stderr , "##__ todo fresh\n");
-        if(i.live_status!=1)
-        {
-            // fprintf(stderr , "\nLIve ERROR  ----------------------------------------\n");
-            exit(-2);
-        }
+        // if(i.live_status!=1)
+        // {
+        //     // fprintf(stderr , "\nLIve ERROR  ----------------------------------------\n");
+        //     exit(-2);
+        // }
         // fprintf(stderr,"--------------ggggggggggggggg------------------\n");
         int id = FreshLiveRoomStatus(&i);
         if(id==-1)
