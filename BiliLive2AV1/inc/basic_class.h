@@ -9,6 +9,8 @@
 #include <workflow/WFTaskFactory.h>
 #include <workflow/WFFacilities.h>
 #include <atomic>
+#include <ctime>
+#include <chrono>
 
 using BLOCK = std::pair<void *, size_t>;
 
@@ -21,7 +23,7 @@ class LiveHomeStatus
 {
 public:
     uint64_t live_time;
-    std::string Tubername; // 用于文件夹命名
+    std::string RoomName; // 用于文件夹命名
     char RoomId_chr[32] = {0};
     std::string RoomHostName; // used to fill host name  ; like "key725" "战鹰"，，parsed by json file
     uint64_t RoomId;
@@ -165,8 +167,10 @@ private:
 public:
     m4s2mp4(m3u8fetch *_mu, LiveHomeStatus *LHS) : LiveStatus(LHS), m3u8list(_mu), KExecutor(&Default_ExecutorManager)
     { // TODO : 初始化开始路径
-        SetFilename("file.m4s");
-        SetDirName("key725");
+        assert(LiveStatus!=nullptr);
+        SetDirName();
+        SetFilename();
+        
         // InitFile();
 #if 0
         _task = [&](){
@@ -184,8 +188,18 @@ public:
         fclose(file);
     }
 
-    void SetFilename(std::string name) { _m4s_filename = std::move(name); }
-    void SetDirName(std::string Dir) { _m4s_dir = std::move(Dir); }
+    void SetFilename()
+    {
+        char buff[25]={0};
+        auto now_time =  std::chrono::system_clock::now();
+        struct tm time;
+        auto tt = std::chrono::system_clock::to_time_t(now_time);
+        localtime_r(&tt,&time);
+        // 年月日时分
+        sprintf(buff,"start_at_%04d_%02d_%02d_%02d_%02d.m4s",time.tm_year,time.tm_mon,time.tm_mday,time.tm_hour,time.tm_sec);
+        _m4s_filename=std::string(buff);
+    }
+    void SetDirName() { _m4s_dir =  this->LiveStatus->RoomName;assert(LiveStatus->RoomName.size()!=0 );}
     void Start();
     void StartOnce();
     void AppendMsgBlock();

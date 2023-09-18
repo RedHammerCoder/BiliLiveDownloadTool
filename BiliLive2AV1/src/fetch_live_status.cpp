@@ -242,7 +242,25 @@ void Listening_liveroom_init()
         LiveHomeStatus rid;
         rid.RoomId = Int_Roomid;
         memcpy(rid.RoomId_chr, chr_roomid, strlen(chr_roomid));
+        
+        std::string dirname;
+        if(Room.HasMember("dirname"))
+        {
+            // dirname=std::string(Room["dirname"].GetString(),Room["dirname"].GetStringLength());
+            const char *dir = Room["dirname"].GetString();
+            size_t dirlen = Room["dirname"].GetStringLength();
+            std::string dirstr(dir,dirlen);
+            dirname=std::move(dirstr);
+
+        }else
+        {
+            dirname=std::string(Room["roomid"].GetString());
+        }
+        rid.RoomName=(dirname);
+        fprintf(stderr , "_________##############dirname is %s   and  raw data is %s\n",rid.RoomName.c_str(),Room["dirname"].GetString());
+        
         liveroom_list.push_back(std::move(rid));
+
     }
     fprintf(stderr, "Tutoal liveroom conunt is %d\r\n", liveroom_list.size());
     // fprintf(stderr,"End Of Get Live Room \r\n");
@@ -863,6 +881,6 @@ int FetchHttpBody(const std::string uri, const void **ptr, size_t *len)
     task->start();
     printf("##start\n");
     wg.wait();
-    free(task);
+    // free(task);
     return state;
 }

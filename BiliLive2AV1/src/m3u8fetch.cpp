@@ -48,7 +48,7 @@ void m3u8fetch::RegisterExecutor()
         int ret = this->SetFetchTask();
         if(ret==-1)return;//url没有初始化
         this->_task->start();
-        sleep(3);
+        // sleep(3);
     };
     KExecutor::SetTask(tsk);
     UploadNode();

@@ -77,8 +77,9 @@ void m4s2mp4::InitFile()
     assert(InitFlag == false);
     assert(file == nullptr);
     assert(_m4s_filename.size() != 0);
+    assert(_m4s_dir.size()!=0);
     // mkdir(_m4s_dir.c_str(),S_IRWXU);
-    std::string Path = Default_Path + '/' + _m4s_dir;
+    std::string Path = Default_Path +'/' + _m4s_dir;
     int flag = TryCreateDir(Path);
     if (flag != 0)
     {
