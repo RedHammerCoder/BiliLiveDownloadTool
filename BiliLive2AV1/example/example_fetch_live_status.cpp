@@ -24,6 +24,7 @@ int main()
     // FILE * fd =  fopen("timerlog.txt","w+");
     int len =0;
     Default_ExecutorManager.Start();
+    m3u8fetchLoop.Start();
     Listening_liveroom_init();
     // GetliveStatus("4089850");
     UpdateRoomListMsg();

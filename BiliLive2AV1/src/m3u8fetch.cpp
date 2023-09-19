@@ -7,13 +7,14 @@
 #include <iostream>
 #include <memory>
 #include "ErrorLog.h"
+#include "fetch_live_status.h"
 
 constexpr size_t unusedLen = strlen("#EXTM3U\n#EXT-X-VERSION:7\n#EXT-X-START:TIME-OFFSET=0\n");
 constexpr int TargDurLen = strlen("#EXT-X-TARGETDURATION");
 constexpr int MapUrILen = strlen("#EXT-X-MAP:URI");
 constexpr int EXTINF = strlen("#EXTINF:");
 
-m3u8fetch::m3u8fetch(LiveHomeStatus *parent) : _Parent(parent), Exec_time(1000), KExecutor(&Default_ExecutorManager)
+m3u8fetch::m3u8fetch(LiveHomeStatus *parent) : _Parent(parent), KExecutor(&m3u8fetchLoop)
 {
     // FetchM3u8Task = WFTaskFactory::create_http_task()
     fprintf(stderr, "  ### ### ###   m3u8 analysisd");
@@ -40,12 +41,24 @@ void m3u8fetch::RegisterExecutor()
         {
             return;
         }
+    #if 0
         this->free_task();
         int ret = this->SetFetchTask();
         if (ret == -1)
             return; // url没有初始化
         this->_task->start();
         // sleep(3);
+    #endif
+    const void * ptr=nullptr;
+    size_t ptr_len=0;
+    
+    int state=-1;
+    do{
+        state = FetchHttpBody(this->Url_m3u8,&ptr,&ptr_len );
+    }while(state!=WFT_STATE_SUCCESS);
+    this->Parserm3u8((char*)ptr,ptr_len);
+    this->_Parent->TransUnit->StartOnce();
+    fprintf(stderr , "m3u8 fetch down  \n");
     };
     KExecutor::SetTask(tsk);
     UploadNode();

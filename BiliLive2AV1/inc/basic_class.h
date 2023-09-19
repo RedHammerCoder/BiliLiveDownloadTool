@@ -82,7 +82,6 @@ private:
     std::string Url_m3u8;
     LiveHomeStatus *_Parent; // 用于获取当前的状态信息
     WFTimerTask *FetchM3u8Task;
-    const int Exec_time;
     WFHttpTask *_task;
     struct
     {
