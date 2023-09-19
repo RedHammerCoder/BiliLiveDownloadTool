@@ -137,6 +137,8 @@ void m4s2mp4::GetM4sList()
 
         RemainTask_nb.fetch_add(1);
         auto &Kvalue = ref.second;
+        Kvalue.first=nullptr;
+        Kvalue.second=0;
         uint64_t m4sId = ref.first;
         auto disp = fs.dispath();
 
@@ -260,10 +262,12 @@ void m4s2mp4::AppendMsgBlock()
         // fprintf(stderr , "Block len : %d",blk);
         if(ptr==nullptr)
         {
-            exit(-2);
+            assert(len==0);
+            continue;
         }
         fwrite(ptr, len, 1, file);
         fflush(file);
         free(ptr);
     }
+    fprintf(stderr , "AppendMsgBlock Done\n");
 }

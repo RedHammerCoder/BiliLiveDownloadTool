@@ -58,7 +58,9 @@ void m3u8fetch::RegisterExecutor()
         } while (state != WFT_STATE_SUCCESS);
         int stat = this->Parserm3u8((char *)ptr, ptr_len);
         if (stat == -2)
-        { return;
+        { 
+            
+            return;
 
         }
            
@@ -74,6 +76,14 @@ void m3u8fetch::RegisterExecutor()
 
 int m3u8fetch::Parserm3u8(char *ptr, size_t len)
 {
+    if(ptr==nullptr && len==0)
+    {
+        fprintf(stderr, "Parserm3u8 Error  \n");
+        fprintf(ERRLOG.Handle , "Parserm3u8 body len is zero \n");
+        fflush(ERRLOG.Handle);
+        return -2;
+
+    }
     std::string line;
     std::stringstream ss;
     char *charptr = ptr;
@@ -103,6 +113,12 @@ int m3u8fetch::Parserm3u8(char *ptr, size_t len)
 #ifdef Debug
     // goto UpdateM4slist;
 #endif
+    if(SeqId>this->Max_m4s_nb)
+    {
+        // 中间有缺页 导致错漏
+        fprintf(ERRLOG.Handle,"产生一个缺页 \n");
+        fflush(ERRLOG.Handle);
+    }
     if (SeqId < CurrentM3u8file.SeqId)
         return -1;
     if (SeqId == CurrentM3u8file.SeqId)
@@ -281,6 +297,10 @@ int m3u8fetch::SetFetchTask()
                                                      const void *body = nullptr;
                                                      size_t body_len = 0;
                                                      resp->get_parsed_body(&body, &body_len);
+                                                     if(body_len==0)
+                                                     {
+                                                        return ;
+                                                     }
                                                      void *Content = malloc(body_len);
                                                      assert(body_len != 0);
                                                      mempcpy(Content, body, body_len);

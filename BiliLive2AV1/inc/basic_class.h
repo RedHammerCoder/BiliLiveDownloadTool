@@ -79,7 +79,7 @@ private:
     std::map<uint64_t, std::pair<void *, size_t>> m4slist; // uint64_t 保存id
 
     uint64_t min_m4s_nb; // 保存最小的m4s id from m4slist   所有小于该数值的文件都已经写入存储
-    uint64_t Max_m4s_nb; // 保存最大的m4s id from m4slist;  确保获取的m3u8文件下序列号小于等于该数值
+    uint64_t Max_m4s_nb=0; // 保存最大的m4s id from m4slist;  确保获取的m3u8文件下序列号小于等于该数值
     void *EXT_X_MAP;
     char *EXT_X_MAP_NAME;
     size_t EXT_X_MAP_len;
