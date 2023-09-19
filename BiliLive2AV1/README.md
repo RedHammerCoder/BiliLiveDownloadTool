@@ -76,3 +76,17 @@ https://d1--cn-gotcha208.bilivideo.com/live-bvc/568137/live_322892_3999292_1500/
 1. m3u8fetch 
   - brief:
     - 构造函数：下载头文件  初始化配置以及网址
+
+
+
+# Json formate
+## brief : json的使用模式
+```json
+{   
+    "defaultpath":"/mnt/e/BiliLive",
+    "liveRoom":[
+        {"roomid":"528","Introomid":528,"dirname":"痒局长"},
+        {"roomid":"246","Introomid":246,"dirname":"杆菌"}
+    ]
+}
+```

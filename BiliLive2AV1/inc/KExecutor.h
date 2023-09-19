@@ -104,8 +104,9 @@ public:
         fprintf(stderr, "____________  upload node --------------\n");
         ID = _manager->uploadNode(_Task);
     }
-    void SwapNode()
+    void DeleteNode()
     {
+        delete _Task;
     }
     virtual ~KExecutor() {}
 };

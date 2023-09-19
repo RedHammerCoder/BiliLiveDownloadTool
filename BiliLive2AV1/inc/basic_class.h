@@ -41,6 +41,11 @@ public:
     std::string M4sUrl_mode;
     m3u8fetch *FetchM3u8Node = nullptr;
     m4s2mp4 *TransUnit = nullptr;
+    /**
+     * @brief 直播间开启或者关闭
+     */
+    static void Start(LiveHomeStatus* );
+    static void Stop(LiveHomeStatus*);
 };
 
 class LivingRoomIndex

@@ -41,25 +41,31 @@ void m3u8fetch::RegisterExecutor()
         {
             return;
         }
-    #if 0
+#if 0
         this->free_task();
         int ret = this->SetFetchTask();
         if (ret == -1)
             return; // url没有初始化
         this->_task->start();
         // sleep(3);
-    #endif
-    const void * ptr=nullptr;
-    size_t ptr_len=0;
-    
-    int state=-1;
-    do{
-        state = FetchHttpBody(this->Url_m3u8,&ptr,&ptr_len );
-    }while(state!=WFT_STATE_SUCCESS);
-    this->Parserm3u8((char*)ptr,ptr_len);
-    this->_Parent->TransUnit->StartOnce();
-    fprintf(stderr , "m3u8 fetch down  \n");
+#endif
+        const void *ptr = nullptr;
+        size_t ptr_len = 0;
+        int state = -1;
+        do
+        {
+            state = FetchHttpBody(this->Url_m3u8, &ptr, &ptr_len);
+        } while (state != WFT_STATE_SUCCESS);
+        int stat = this->Parserm3u8((char *)ptr, ptr_len);
+        if (stat == -2)
+        { return;
+
+        }
+           
+        this->_Parent->TransUnit->StartOnce();
+        fprintf(stderr, "m3u8 fetch down  \n");
     };
+
     KExecutor::SetTask(tsk);
     UploadNode();
     // KExecutor::S
@@ -79,7 +85,7 @@ int m3u8fetch::Parserm3u8(char *ptr, size_t len)
         fprintf(stderr, "u3m8 Error  \n");
         fwrite((void *)ptr, len, 1, ERRLOG.Handle);
         fflush(ERRLOG.Handle);
-        return -1;
+        return -2;
     }
 
     charptr = charptr + unusedLen;
