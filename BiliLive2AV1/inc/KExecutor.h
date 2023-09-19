@@ -106,7 +106,6 @@ public:
     }
     void DeleteNode()
     {
-        delete _Task;
     }
     virtual ~KExecutor() {}
 };
