@@ -83,8 +83,8 @@ int m3u8fetch::Parserm3u8(char *ptr, size_t len)
     if (strncmp(charptr, "#EXTM3U", strlen("#EXTM3U")) != 0)
     {
         fprintf(stderr, "u3m8 Error  \n");
-        fwrite((void *)ptr, len, 1, ERRLOG.Handle);
-        fflush(ERRLOG.Handle);
+        // fwrite((void *)ptr, len, 1, ERRLOG.Handle);
+        // fflush(ERRLOG.Handle);
         return -2;
     }
 
@@ -141,6 +141,8 @@ UpdateM4slist:
             // std::cout<<"\nfind a # EXT_INF"<<std::endl;
             ss >> line;
             sscanf(line.c_str(), "%lld.m4s", &m4sId);
+
+            if(m4sId<=this->Max_m4s_nb){continue;}
             this->Max_m4s_nb = (this->Max_m4s_nb > m4sId ? this->Max_m4s_nb : m4sId);
             // fprintf(stderr, "m4s is %lld", m4sId);
             std::cout << "m4s is" << m4sId << ".m4s" << std::endl;
