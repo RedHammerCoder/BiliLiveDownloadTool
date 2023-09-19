@@ -6,7 +6,7 @@ extern  std::string ERRORLOGPATH;
 
 
 
-void SetErrorLogPath(std::string &&path);
+void SetErrorLogPath(const std::string &path);
 
 class ErrorLog
 {
@@ -15,9 +15,10 @@ private:
 public:
     FILE * Handle;
     const std::string LogPath;
-    ErrorLog()
+    ErrorLog(){}
+    void  SetErrorLog()
     {
-        FILE * Handle =fopen(ERRORLOGPATH.c_str(),"w+");
+        Handle =fopen(ERRORLOGPATH.c_str(),"w+");
     }
     ~ErrorLog()
     {

@@ -86,7 +86,14 @@ https://d1--cn-gotcha208.bilivideo.com/live-bvc/568137/live_322892_3999292_1500/
     "defaultpath":"/mnt/e/BiliLive",
     "liveRoom":[
         {"roomid":"528","Introomid":528,"dirname":"痒局长"},
+
         {"roomid":"246","Introomid":246,"dirname":"杆菌"}
     ]
 }
 ```
+
+
+# m4s transfer to mp4
+
+## m4s brief
+- 第一个 M4S 段由它包含的初始化数据标识

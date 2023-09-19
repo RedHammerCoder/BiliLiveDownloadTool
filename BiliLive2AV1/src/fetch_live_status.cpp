@@ -13,6 +13,7 @@
 #include "m3u8fetch.h"
 #include "m4s2mp4.h"
 #include <workflow/WFFacilities.h>
+#include "ErrorLog.h"
 
 using namespace rapidjson;
 std::deque<LiveHomeStatus> liveroom_list;
@@ -227,6 +228,7 @@ void Listening_liveroom_init()
         std::string defaultpath(Parsed_json["defaultpath"].GetString());
         fprintf(stderr, "set default path \n");
         SetDefaultPath(defaultpath);
+        SetErrorLogPath(defaultpath);
     }
 
     auto roomlists = Parsed_json["liveRoom"].GetArray();
