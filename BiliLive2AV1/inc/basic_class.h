@@ -91,8 +91,8 @@ private:
     struct
     {
         // todo : 用于保存最新的m3u8文件  使用文件名以及文件长度来避免 避免重复解析
-        uint64_t SeqId;
-        size_t FileSize;
+        uint64_t SeqId=0;
+        size_t FileSize=0;
         std::string headFile;
 
     } CurrentM3u8file;
@@ -214,3 +214,5 @@ public:
     void InitFile(); // todo : 初始化file并且将数据插入
     // void TransCodeWrite();//TODO : ffmpeg 解码并写入文件
 };
+
+

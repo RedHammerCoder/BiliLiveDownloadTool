@@ -31,7 +31,6 @@ void m3u8fetch::GetHeadfile()
 void m3u8fetch::RegisterExecutor()
 {
     fprintf(stderr, "m3u8fetch auto task start\n");
-    this->resetUri();
     auto tsk = [&]()
     {
         // TODO 获取m3u8文件
@@ -54,16 +53,16 @@ void m3u8fetch::RegisterExecutor()
         int state = -1;
         do
         {
+            fprintf(stderr, "do fetching url \n");
             state = FetchHttpBody(this->Url_m3u8, &ptr, &ptr_len);
         } while (state != WFT_STATE_SUCCESS);
         int stat = this->Parserm3u8((char *)ptr, ptr_len);
-        if (stat == -2)
+        fprintf(stderr, "Parserm3u8ing \n");
+        if (stat != 0 )
         { 
-            
             return;
-
         }
-           
+        fprintf(stderr, "Parserm3u8ed \n");
         this->_Parent->TransUnit->StartOnce();
         fprintf(stderr, "m3u8 fetch down  \n");
     };

@@ -1,5 +1,5 @@
-project(biliLiveDownload)
 cmake_minimum_required(VERSION 3.25)
+project(biliLiveDownload)
 set(CMAKE_VERBOSE_MAKEFILE ON)
 
 find_package(workflow REQUIRED )

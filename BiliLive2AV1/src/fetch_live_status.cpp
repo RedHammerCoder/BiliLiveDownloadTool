@@ -851,9 +851,11 @@ std::string LiveHomeStatus::GetM4sUrl(uint64_t m4s_id)
 int FetchHttpBody(const std::string uri, const void **ptr, size_t *len)
 {
     // printf("exec start\n and uri is %s ", uri.c_str());
-    WFFacilities::WaitGroup wg(1);
+    // WFFacilities::WaitGroup wg(1);
+    SyncBarrier syb;
+    // auto Kseed= syb.dispath();
     int state = 0;
-    auto task_callback = [&wg, &ptr, &len, &state](WFHttpTask *task)
+    auto task_callback = [ &ptr, &len, &state , sed{syb.dispath()}](WFHttpTask *task)
     {
         printf("entry to resp\n");
         auto req = task->get_req();
@@ -880,20 +882,21 @@ int FetchHttpBody(const std::string uri, const void **ptr, size_t *len)
         }
         if (state != WFT_STATE_SUCCESS)
         {
-            wg.done();
+            // wg.done();
             return;
         }
         resp->get_parsed_body(ptr, len);
         void *mem_dest = malloc(*len);
         mempcpy(mem_dest, *ptr, *len);
         *ptr = mem_dest;
-        wg.done();
+        // wg.done();
     };
 
     auto task = WFTaskFactory::create_http_task(uri, 7, 7, task_callback);
     task->start();
     printf("##start\n");
-    wg.wait();
+    syb.wait();
+    // wg.wait();
     // free(task);
     return state;
 }
