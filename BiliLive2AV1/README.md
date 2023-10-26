@@ -4,6 +4,8 @@
 1. 实现应对 主播重启直播间导致的header变化以及下载流的改变 避免不同header的m4s文件写入同意列队中
  - 根据livetime的变化 判断是否需要重启视频流
  - 完善body的生命周期  避免内存泄露
+
+2. TODO: if(SeqId>this->Max_m4s_nb) 之后添加当前状态的检查
 ### https
 1. 建立维护https接口 实现使用https 与bilibili建立链接关系
 2. workflow 库 简化轮子操作
