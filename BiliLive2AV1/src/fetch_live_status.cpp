@@ -264,8 +264,7 @@ void Listening_liveroom_init()
         liveroom_list.push_back(std::move(rid));
 
     }
-    fprintf(stderr, "Tutoal liveroom conunt is %d\r\n", liveroom_list.size());
-    // fprintf(stderr,"End Of Get Live Room \r\n");
+        // fprintf(stderr,"End Of Get Live Room \r\n");
     free(block);
 }
 
@@ -287,13 +286,10 @@ void GetliveStatus(const char *Liveaddr)
 }
 #endif
 
-void UpdateRoomListMsg()
+void UpdateRoomMsg(LiveHomeStatus & RoomMsg)
 {
     SyncBarrier syncB;
     // syncB.dispath
-
-    for (auto &RoomMsg : liveroom_list)
-    {
         fprintf(stderr, "start to dispath\n");
         // auto kak= syncB.dispath();
         auto task_callback = [ &syncB  ,&RoomMsg](WFHttpTask *task)
@@ -391,15 +387,6 @@ void UpdateRoomListMsg()
             {
                 fprintf(stderr, "Current Room %s is Running\r\n", RoomMsg.RoomId_chr);
             }
-            // for (auto &i : liveroom_list)
-            // {
-            //     if (i.RoomId == RoomId)
-            //     {
-            //         i.live_time = Live_time;
-            //         i.live_status = LiveStatus;
-            //     }
-            //     return;
-            // }
         };
         std::string website = web_live_status + "?id=" + RoomMsg.RoomId_chr;
         std::cout << "website add is " << website << std::endl;
@@ -409,7 +396,6 @@ void UpdateRoomListMsg()
         auto req = task->get_req();
         req->add_header_pair("Accept", "*/*");
         req->add_header_pair("User-Agent", "Mozilla/5.0");
-        req->add_header_pair("Connection", "close");
         fprintf(stderr, "end to dispath\n");
         task->start();
         /**
@@ -417,14 +403,17 @@ void UpdateRoomListMsg()
          *
          */
         // fprintf(stderr, "Upate RoomList\n");
-       
-    }
-    sleep(3);
     syncB.wait();
     fprintf(stderr, "Exit from Update Room list\n");
-    
-
     return;
+}
+
+void UpdateRoomListMsg()
+{
+    for(auto & ref : liveroom_list)
+    {
+        UpdateRoomMsg(ref);
+    }
 }
 
 const std::string RoomUrlInfo = "https://api.live.bilibili.com/xlive/web-room/v2/index/getRoomPlayInfo";

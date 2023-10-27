@@ -95,6 +95,16 @@ target_link_libraries(TestSpliteFile  PUBLIC  libBili_Live_Download_CORE.so  ${W
 add_executable(workflow_livetime  example/WorkflowliveCycl.cpp)
 target_link_libraries(workflow_livetime PUBLIC ${WORKFLOW_LIB})
 
+add_executable( main_despatch prog/main_despatch.cpp )
+target_link_directories(main_despatch  PUBLIC build/)
+target_include_directories(main_despatch PUBLIC  ${HEADER_FETCH_STATUS} )
+target_link_libraries(main_despatch libBili_Live_Download_CORE.so  ${WORKFLOW_LIB})
+
+
+add_executable(  main_loop  prog/main_loop.cpp )
+target_link_directories(main_loop  PUBLIC build/)
+target_include_directories(main_loop PUBLIC  ${HEADER_FETCH_STATUS} )
+target_link_libraries(main_loop libBili_Live_Download_CORE.so  ${WORKFLOW_LIB})
 
 
 

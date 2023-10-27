@@ -15,6 +15,7 @@
 
 // using namespace ParallelCtrl;
 
+
 using BLOCK = std::pair<void *, size_t>;
 
 class LivingRoomIndex;
@@ -24,7 +25,9 @@ class LiveHomeStatus;
 
 class LiveHomeStatus
 {
-public:
+public: //h1698325202
+    char  m4shead[16] ={0}; //添加对m4s检查
+    pid_t SubPid;
     uint64_t live_time;
     std::string RoomName; // 用于文件夹命名
     char RoomId_chr[32] = {0};
@@ -32,20 +35,21 @@ public:
     uint64_t RoomId;
     bool Hidden;
     bool Lock;
-    int live_status;
+    int live_status=0;
+    int64_t key_id=0;
+    int live_status_old=0;
     bool encrypted;
     LivingRoomIndex *LivingRoomExt = nullptr;
     std::string GetM3u8Url();
     std::string GetM4sUrl(uint64_t m4s_id);
     std::string GetM4sContent(std::string header);
-    std::string M4sUrl_mode;
+    // std::string M4sUrl_mode;
     m3u8fetch *FetchM3u8Node = nullptr;
     m4s2mp4 *TransUnit = nullptr;
+    LiveHomeStatus *ProcShared=nullptr;
     /**
      * @brief 直播间开启或者关闭
      */
-    static void Start(LiveHomeStatus* );
-    static void Stop(LiveHomeStatus*);
 };
 
 class LivingRoomIndex

@@ -143,6 +143,7 @@ void LivingRoomIndexAnalysisNew();
 void Listening_liveroom_init();
 int FreshLiveRoomStatus(LiveHomeStatus *LHS);
 void UpdateRoomListMsg();
+void UpdateRoomMsg(LiveHomeStatus & RoomMsg);
 
 int FetchHttpBody(const std::string uri ,const void** ptr , size_t *len);
 

@@ -151,10 +151,12 @@ public:
         _syncb = arg._syncb;
         // _syncb=arg._syncb;
         arg._syncb = nullptr;
+        return *this;
     }
     Dispath &operator=(Dispath &&arg)
     {
         _syncb = arg._syncb;
         arg._syncb = nullptr;
+        return *this;
     }
 };
