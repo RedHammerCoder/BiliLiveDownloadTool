@@ -47,6 +47,7 @@ public: //h1698325202
     m3u8fetch *FetchM3u8Node = nullptr;
     m4s2mp4 *TransUnit = nullptr;
     LiveHomeStatus *ProcShared=nullptr;
+    int shmid=0;
     /**
      * @brief 直播间开启或者关闭
      */

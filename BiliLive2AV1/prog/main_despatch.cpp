@@ -12,18 +12,20 @@
 
 LiveHomeStatus *LiveStatus;
 
-
-void sigCtrlC(int sig)
+void sigKill(int sig)
 {
-    fprintf(stderr , "signal triggerd \n");
-
+    exit(-1);
 }
+
+
 
 int main(int argc, char **argv)
 {
+    signal(SIGKILL , sigKill);
+    fprintf(stderr , "PID %d",getpid());
     auto FD= fopen("./1.txt","w+");
     fprintf(FD, "Despatch exec err %s\n", argv[0]);
-    signal(SIGINT,sigCtrlC);
+
     
     assert(argc == 1);
     pid_t pid = getpid();

@@ -1,4 +1,5 @@
 #include <sys/ipc.h>
+#include <sys/wait.h>
 #include <sys/shm.h>
 #include "basic_class.h"
 #include "fetch_live_status.h"
@@ -9,12 +10,36 @@
 #include <new>
 #include <atomic>
 
+#include <sys/mman.h>
+#include <sys/stat.h> /* For mode constants */
+#include <fcntl.h>
+
+
+// void sigChild(int sig)
+// {
+//     fprintf(stderr , "SIG CHILD");
+// }
+
+void SigExit(int sig)
+{
+    fprintf(stderr ,"exit main loop %d\n",getpid());
+    for (auto CX : liveroom_list)
+    {
+        assert(CX.shmid != 0);
+        shmctl(CX.shmid, IPC_RMID, 0);
+        CX.shmid = 0;
+    }
+    exit(-1);
+}
+
 // 使用kill pid 0 来判断子进程是否存在
 //  liveroom_list  std::deque<livehomestatus>
 std::atomic_int64_t random_id;
 
 int main(int argc, char **argv)
 {
+    signal(SIGINT, SigExit);
+    // signal(SIGCHLD,sigChild );
     random_id = getpid() + 1;
     fprintf(stderr, "start to exec\n");
     // 初始化liveroomlist
@@ -57,9 +82,10 @@ int main(int argc, char **argv)
                     exit(-1);
                 }
                 auto k = new (addr) LiveHomeStatus();
-                k->live_status=0;
+                k->live_status = 0;
                 ref.ProcShared = (LiveHomeStatus *)addr;
                 *k = ref;
+                ref.shmid = shm_identifier;
             }
             // 已经完成初始化
             // TODO: 开始获取直播间信息
@@ -70,18 +96,19 @@ int main(int argc, char **argv)
                 // 子进程负责设置ref.live_status_old为1
 
                 pid_t pt = fork();
-                fprintf(stderr , "fork called \n");
+                fprintf(stderr, "fork called %d\n",pt);
                 if (pt < 0)
                 {
+                    fprintf(stderr, "fork Error %d\n",pt);
                     exit(-1);
                 }
                 if (pt == 0)
                 {
                     // it is new process;
-                    sleep(3);
                     // TODO: create shared memary;
                     int64_t shared_memary_key = ref.key_id;
                     std::stringstream ss;
+                    fprintf(stderr, "fork exece\n");
                     ss << shared_memary_key;
                     auto &&key_id = ss.str();
                     fprintf(stderr, "get shared mem key %s \n", key_id.c_str());
@@ -91,8 +118,9 @@ int main(int argc, char **argv)
                 }
                 if (pt > 0)
                 { // it is parsent process
+                    fprintf(stderr , "main pro exec \n");
                     ref.SubPid = pt;
-                    ref.ProcShared->SubPid=pt;
+                    ref.ProcShared->SubPid = pt;
                 }
                 ref.ProcShared->live_status = 1;
             }
@@ -103,10 +131,10 @@ int main(int argc, char **argv)
                 fprintf(stderr, "start to kill sub Proc \n");
                 ref.ProcShared->live_status = 0;
             }
-            kill(ref.SubPid, SIGINT);
+            // kill(ref.SubPid, SIGINT);
             *(ref.ProcShared) = ref;
         }
-        sleep(20); // 睡眠20s
+        sleep(10); // 睡眠20s
     }
 
     return 0;
