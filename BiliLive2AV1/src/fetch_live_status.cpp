@@ -290,13 +290,11 @@ void UpdateRoomMsg(LiveHomeStatus & RoomMsg)
 {
     SyncBarrier syncB;
     // syncB.dispath
-        fprintf(stderr, "start to dispath\n");
         // auto kak= syncB.dispath();
         auto task_callback = [ &syncB  ,&RoomMsg](WFHttpTask *task)
         {
             // sleep(3);
             Dispath disp  =syncB.dispath();
-            fprintf(stderr , "echo back\n");
             protocol::HttpRequest *req = task->get_req();
             protocol::HttpResponse *resp = task->get_resp();
             int state = task->get_state();
@@ -340,7 +338,6 @@ void UpdateRoomMsg(LiveHomeStatus & RoomMsg)
             // fprintf(stderr, "entry to req_resp\r\n");
             // size_t Uri_len = strlen(uri);
             resp->get_parsed_body(&body, &body_len);
-            fprintf(stderr, "@@ body size is %ld\r\n", body_len);
             fwrite(body, 1, body_len, stderr);
             fflush(stderr);
             // fprintf(stderr, "http req web URI  %s   %d \r\n", uri, Uri_len);
@@ -356,15 +353,15 @@ void UpdateRoomMsg(LiveHomeStatus & RoomMsg)
             if (!StatusJson.HasMember("msg"))
             {
                 fprintf(stderr, "########---------Json Parser Error");
-                return;
+                exit(-1);
             }
             assert(StatusJson["msg"].IsString());
             const char *msg(StatusJson["msg"].GetString());
-            fprintf(stderr, "Msg Status is  %s", msg);
+            // fprintf(stderr, "Msg Status is  %s", msg);
             if (strncmp(msg, "ok", 2) != 0)
             {
                 fprintf(stderr, "Live Room Status Error , Msg not OK");
-                return;
+                exit(-1);
             }
             /**
              * @todo 添加trigger 以便在直播结束的时候执行清除任务
@@ -396,7 +393,7 @@ void UpdateRoomMsg(LiveHomeStatus & RoomMsg)
         auto req = task->get_req();
         req->add_header_pair("Accept", "*/*");
         req->add_header_pair("User-Agent", "Mozilla/5.0");
-        fprintf(stderr, "end to dispath\n");
+        // fprintf(stderr, "end to dispath\n");
         task->start();
         /**
          * @todo : 添加强制性检查 ； 保证所有task都完成后才返回
@@ -404,7 +401,7 @@ void UpdateRoomMsg(LiveHomeStatus & RoomMsg)
          */
         // fprintf(stderr, "Upate RoomList\n");
     syncB.wait();
-    fprintf(stderr, "Exit from Update Room list\n");
+    // fprintf(stderr, "Exit from Update Room list\n");
     return;
 }
 
@@ -445,7 +442,7 @@ int FreshLiveRoomStatus(LiveHomeStatus *LHS)
         LHS->TransUnit = new m4s2mp4(LHS->FetchM3u8Node, LHS);
     }
     sleep(3);
-    fprintf(stderr , "------------LHS init Down \n");
+    // fprintf(stderr , "------------LHS init Down \n");
 
     std::string website;
     website.resize(RoomUrlInfo.size() + 256);

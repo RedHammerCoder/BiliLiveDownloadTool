@@ -14,7 +14,7 @@ Dispath SyncBarrier::dispath()
 {
     // sleep(4);
     Dispath ana(this);
-    fprintf(stderr, "call : sss and ID is  %zu\n",(size_t)this->AtomicInt.load());
+    // fprintf(stderr, "call : sss and ID is  %zu\n",(size_t)this->AtomicInt.load());
     fflush(stderr);
     // sleep(4);
     

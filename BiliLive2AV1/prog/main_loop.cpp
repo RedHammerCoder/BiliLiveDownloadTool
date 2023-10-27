@@ -23,20 +23,19 @@ int main(int argc, char **argv)
     {
         for (auto &ref : liveroom_list)
         {
-            UpdateRoomMsg(ref);
             if (ref.key_id == 0)
             {
                 int key_id = random_id.fetch_add(1);
                 ref.key_id = key_id;
-                int shm_identifier = shmget((key_t)key_id, sizeof(LiveHomeStatus), 0777 | IPC_CREAT | IPC_EXCL);
+                int shm_identifier = shmget((key_t)key_id, sizeof(LiveHomeStatus), 0666 | IPC_CREAT | IPC_EXCL);
                 if (shm_identifier == -1)
                 {
                     fprintf(stderr, "error on Create shared Memary \n");
                     exit(-1);
                 }
                 void *addr = shmat(shm_identifier, 0, 0);
-                assert(addr!=nullptr);
-                fprintf(stderr, "key_id is %d\n", shm_identifier);
+                assert(addr != nullptr);
+                fprintf(stderr, "\n key_id is %d\n", shm_identifier);
                 if (addr == (void *)-1)
                 {
                     fprintf(stderr, "shmat attach mem Error  %s\n", strerror(errno));
@@ -57,21 +56,21 @@ int main(int argc, char **argv)
                     }
                     exit(-1);
                 }
-                auto k = new (addr)LiveHomeStatus();
-                fprintf(stderr ,"addr is 0x%x\n",(void*)addr);
-                fprintf(stderr, "right exec \n");
+                auto k = new (addr) LiveHomeStatus();
+                k->live_status=0;
                 ref.ProcShared = (LiveHomeStatus *)addr;
-                fprintf(stderr, "end exec 2 \n");
                 *k = ref;
-
-                fprintf(stderr, "end exec \n");
             }
+            // 已经完成初始化
+            // TODO: 开始获取直播间信息
+            UpdateRoomMsg(ref);
 
-            if (ref.live_status == 1 && ref.live_status_old == 0)
+            if (ref.live_status == 1 && ref.ProcShared->live_status == 0)
             {
                 // 子进程负责设置ref.live_status_old为1
 
                 pid_t pt = fork();
+                fprintf(stderr , "fork called \n");
                 if (pt < 0)
                 {
                     exit(-1);
@@ -93,8 +92,19 @@ int main(int argc, char **argv)
                 if (pt > 0)
                 { // it is parsent process
                     ref.SubPid = pt;
+                    ref.ProcShared->SubPid=pt;
                 }
+                ref.ProcShared->live_status = 1;
             }
+
+            if (ref.live_status == 0 && ref.ProcShared->live_status == 1)
+            {
+                // TODO: kill sub proc;
+                fprintf(stderr, "start to kill sub Proc \n");
+                ref.ProcShared->live_status = 0;
+            }
+            kill(ref.SubPid, SIGINT);
+            *(ref.ProcShared) = ref;
         }
         sleep(20); // 睡眠20s
     }
