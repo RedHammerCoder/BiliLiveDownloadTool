@@ -39,10 +39,7 @@ std::atomic_int64_t random_id;
 int main(int argc, char **argv)
 {
     signal(SIGINT, SigExit);
-    // signal(SIGCHLD,sigChild );
     random_id = getpid() + 1;
-    fprintf(stderr, "start to exec\n");
-    // 初始化liveroomlist
     Listening_liveroom_init();
     while (true)
     {
@@ -90,7 +87,6 @@ int main(int argc, char **argv)
             // 已经完成初始化
             // TODO: 开始获取直播间信息
             UpdateRoomMsg(ref);
-
             if (ref.live_status == 1 && ref.ProcShared->live_status == 0)
             {
                 // 子进程负责设置ref.live_status_old为1
@@ -118,7 +114,6 @@ int main(int argc, char **argv)
                 }
                 if (pt > 0)
                 { // it is parsent process
-                    fprintf(stderr , "main pro exec \n");
                     ref.SubPid = pt;
                     ref.ProcShared->SubPid = pt;
                 }

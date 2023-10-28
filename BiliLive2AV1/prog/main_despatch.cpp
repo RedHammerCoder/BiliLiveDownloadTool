@@ -34,7 +34,6 @@ int main(int argc, char **argv)
     ss << share_mem;
     int id = 0;
     ss >> id;
-    fprintf(FD, "Entry to despatch  %d \n", id);
     LiveHomeStatus *LiveStatus;
     int ShmId = shmget((key_t)id, sizeof(LiveHomeStatus), 0666 | IPC_CREAT);
     if (ShmId == -1)
@@ -53,6 +52,8 @@ int main(int argc, char **argv)
     // assert(LiveStatus->ProcShared != nullptr);
     LiveStatus->ProcShared = nullptr;
     fprintf(FD , "RoomName %s",LiveStatus->RoomName.c_str() );
+    FreshLiveRoomStatus(LiveStatus);
+
     while (1)
     {
         fprintf(FD, "Exec in Loop\n");
