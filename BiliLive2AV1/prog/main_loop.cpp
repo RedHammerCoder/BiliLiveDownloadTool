@@ -25,9 +25,15 @@ void SigExit(int sig)
     fprintf(stderr ,"exit main loop %d\n",getpid());
     for (auto CX : liveroom_list)
     {
+        kill(SIGINT , CX.SubPid);
         assert(CX.shmid != 0);
         shmctl(CX.shmid, IPC_RMID, 0);
         CX.shmid = 0;
+        if(CX.SubPid!=0)
+        {
+            waitpid(CX.SubPid,0,0);
+        }
+        
     }
     exit(-1);
 }
@@ -116,6 +122,7 @@ int main(int argc, char **argv)
                 { // it is parsent process
                     ref.SubPid = pt;
                     ref.ProcShared->SubPid = pt;
+                    ref.ProcShared->live_status=1;
                 }
                 ref.ProcShared->live_status = 1;
             }

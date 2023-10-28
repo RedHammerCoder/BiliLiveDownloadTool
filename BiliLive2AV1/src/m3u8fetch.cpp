@@ -9,6 +9,7 @@
 #include "ErrorLog.h"
 #include "fetch_live_status.h"
 
+const char * ZeroStr = "\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0";
 constexpr size_t unusedLen = strlen("#EXTM3U\n#EXT-X-VERSION:7\n#EXT-X-START:TIME-OFFSET=0\n");
 constexpr int TargDurLen = strlen("#EXT-X-TARGETDURATION");
 constexpr int MapUrILen = strlen("#EXT-X-MAP:URI");
@@ -40,14 +41,6 @@ void m3u8fetch::RegisterExecutor()
         {
             return;
         }
-#if 0
-        this->free_task();
-        int ret = this->SetFetchTask();
-        if (ret == -1)
-            return; // url没有初始化
-        this->_task->start();
-        // sleep(3);
-#endif
         const void *ptr = nullptr;
         size_t ptr_len = 0;
         int state = -1;
@@ -57,20 +50,26 @@ void m3u8fetch::RegisterExecutor()
             state = FetchHttpBody(this->Url_m3u8, &ptr, &ptr_len);
         } while (state != WFT_STATE_SUCCESS);
         int stat = this->Parserm3u8((char *)ptr, ptr_len);
+
+        if(  strncmp( this->_Parent->m4shead ,ZeroStr , strlen(ZeroStr))==0 )
+        {
+           memcpy(this->_Parent->m4shead  ,this->CurrentM3u8file.headFile.c_str() , this->CurrentM3u8file.headFile.size());
+        }else
+        {
+            if(this->CurrentM3u8file.headFile != std::string(this->_Parent->m4shead) )
+            {
+                raise(SIGINT);
+            }
+        }
         fprintf(stderr, "Parserm3u8ing \n");
         if (stat != 0 )
         { 
             return;
         }
-        fprintf(stderr, "Parserm3u8ed \n");
         this->_Parent->TransUnit->StartOnce();
-        fprintf(stderr, "m3u8 fetch down  \n");
     };
-
     KExecutor::SetTask(tsk);
     UploadNode();
-    // KExecutor::S
-    // UploadNode(tsk);
 }
 
 int m3u8fetch::Parserm3u8(char *ptr, size_t len)
@@ -114,7 +113,6 @@ int m3u8fetch::Parserm3u8(char *ptr, size_t len)
 #endif
     if(SeqId>this->Max_m4s_nb)
     {
-        // 中间有缺页 导致错漏
         fprintf(ERRLOG.Handle,"产生一个缺页 \n");
         fflush(ERRLOG.Handle);
     }
@@ -179,9 +177,6 @@ UpdateM4slist:
         // std::cout << "uri is " << sbstr.substr(8) << std::endl;
         if (sbstr.substr(0, MapUrILen) == (std::string_view("#EXT-X-MAP:URI")).substr(0, MapUrILen))
         {
-            // continue;
-            // std::cout << "#######find a ext map uri" << std::endl;
-            // ss>>line;
             char buffs[40] = {0};
             sscanf(line.c_str(), "#EXT-X-MAP:URI=\"%s", buffs);
             if (buffs[strlen(buffs) - 1] == '\"')

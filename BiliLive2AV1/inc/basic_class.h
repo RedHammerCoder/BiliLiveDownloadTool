@@ -141,9 +141,6 @@ public:
         return 0;
         this->SetFetchTask();
         fprintf(stderr, "Set Fetch Task\n");
-        // assert(this->_task != nullptr);
-        // fprintf(stderr, "------------m3u8 http start-----------\n");
-        // this->_task->start();
         return 0;
     }
     // int updatem3u8list();//@todo : 更新m3u8文件列表
@@ -179,6 +176,7 @@ private:
 public:
     m4s2mp4(m3u8fetch *_mu, LiveHomeStatus *LHS) : LiveStatus(LHS), m3u8list(_mu), KExecutor(&Default_ExecutorManager)
     { // TODO : 初始化开始路径
+        fprintf(stderr , "m4s2mp4 Start to init \n");
         assert(LiveStatus!=nullptr);
         SetDirName();
         SetFilename();

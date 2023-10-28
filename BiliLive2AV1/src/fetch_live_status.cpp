@@ -386,7 +386,7 @@ void UpdateRoomMsg(LiveHomeStatus & RoomMsg)
             }
         };
         std::string website = web_live_status + "?id=" + RoomMsg.RoomId_chr;
-        std::cout << "website add is " << website << std::endl;
+        // std::cout << "website add is " << website << std::endl;
 
         auto task = WFTaskFactory::create_http_task(website, REDIRECT_MAX, RETRY_MAX, task_callback);
         // auto task = WFTaskFactory::create_http_task()
@@ -443,7 +443,6 @@ int FreshLiveRoomStatus(LiveHomeStatus *LHS)
     }
     sleep(3);
     // fprintf(stderr , "------------LHS init Down \n");
-
     std::string website;
     website.resize(RoomUrlInfo.size() + 256);
     char buff[255];
@@ -522,39 +521,23 @@ int FreshLiveRoomStatus(LiveHomeStatus *LHS)
          */
         auto LiveStream = rapidjson::Pointer("/data/playurl_info/playurl/stream").Get(webdesc);
         assert(LiveStream->IsArray());
-        // fprintf(stderr,"\nENTRY TO Pointer\n");
-
         for (auto &Stream : LiveStream->GetArray())
         {
             assert(Stream.HasMember("protocol_name"));
-            // fprintf(stderr,"\nASSERT PROTO NAME\n");
-
             std::string ProtoName = Stream["protocol_name"].GetString();
             if (strncmp(ProtoName.c_str(), "http_hls", strlen("http_hls")) != 0)
                 continue;
             for (auto &format : Stream["format"].GetArray())
             {
-                // fprintf(stderr,"\nENTRY Format name\n");
-                // assert(Stream)
                 auto formatName = format["format_name"].GetString();
-
-                // fprintf(stderr,"\n  formate name is %s\n",formatName);
-
                 if (strncmp(formatName, "fmp4", strlen("fmp4")) != 0)
                     continue;
-                // fprintf(stderr,"\nCODEC\n");
-
                 for (auto &codeEle : format["codec"].GetArray())
                 {
-                    // fprintf(stderr,"\nENTRY TO CODEC\n");
                     assert(codeEle["codec_name"].IsString());
                     auto codecname = codeEle["codec_name"].GetString();
-                    // fprintf(stderr , "codec name is %s \n",codecname);
                     if (strncmp(codecname, "avc", strlen("avc")) != 0)
                         continue;
-                    // fprintf(stderr,"\nIn line %s\n",__LINE__);
-                    // fflush(stderr);
-
                     std::string UrlBase = codeEle["base_url"].GetString();
                     assert(codeEle["url_info"].IsArray());
                     auto url_info_t = codeEle["url_info"].GetArray();
@@ -582,6 +565,7 @@ int FreshLiveRoomStatus(LiveHomeStatus *LHS)
     req->add_header_pair("Connection", "close");
     fprintf(stderr, "Task Start\n");
     Task->start();
+    fprintf(stderr, "Exit from FreshLiveRoom\n");
 
 
     return 0;

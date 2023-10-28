@@ -12,20 +12,24 @@
 
 LiveHomeStatus *LiveStatus;
 
+void Exit()
+{
+    fprintf(stderr , " SubExec Exited  %d",getpid());
+    // (LiveStatus->FetchM3u8Node)->~m3u8fetch();
+    // LiveStatus->TransUnit->~m4s2mp4();
+    // auto key = LiveStatus->key_id;
+    // shmdt((void*)LiveStatus);
+}
 void sigKill(int sig)
 {
-    exit(-1);
+    Exit();
 }
-
-
-
 int main(int argc, char **argv)
 {
-    signal(SIGKILL , sigKill);
+    // signal(SIGKILL , sigKill);
+    signal(SIGINT,sigKill);
     fprintf(stderr , "PID %d",getpid());
-    auto FD= fopen("./1.txt","w+");
-    fprintf(FD, "Despatch exec err %s\n", argv[0]);
-
+    fprintf(stderr, "Despatch exec err %s\n", argv[0]);
     
     assert(argc == 1);
     pid_t pid = getpid();
@@ -38,27 +42,23 @@ int main(int argc, char **argv)
     int ShmId = shmget((key_t)id, sizeof(LiveHomeStatus), 0666 | IPC_CREAT);
     if (ShmId == -1)
     {
-        fprintf(FD, "Exit in shmget %s", strerror(errno));
+        fprintf(stderr, "Exit in shmget %s", strerror(errno));
         exit(-1);
     }
     void *target = shmat(ShmId, 0, 0);
-
     if (target == (void *)-1)
     {
-        fprintf(FD, "shmat  Err  is %s", strerror(errno));
+        fprintf(stderr, "shmat  Err  is %s", strerror(errno));
         exit(-1);
     }
     LiveStatus = (LiveHomeStatus *)target;
-    // assert(LiveStatus->ProcShared != nullptr);
     LiveStatus->ProcShared = nullptr;
-    fprintf(FD , "RoomName %s",LiveStatus->RoomName.c_str() );
+    fprintf(stderr , "RoomName \n");
     FreshLiveRoomStatus(LiveStatus);
-
     while (1)
     {
-        fprintf(FD, "Exec in Loop\n");
+        fprintf(stderr, "Exec in Loop\n");
         sleep(1);
     }
-    fclose(FD);
-    return 0;
+    Exit();
 }

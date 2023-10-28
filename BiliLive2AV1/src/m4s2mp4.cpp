@@ -16,7 +16,6 @@ void SetDefaultPath(std::string Path)
 void m4s2mp4::Start()
 {
     fprintf(stderr, "#################------------- m4smp4 start\n");
-
     _task = [=]()
     {
         fprintf(stderr, "###----m4s2mp4 ERROR\n");
@@ -85,7 +84,7 @@ void m4s2mp4::InitFile()
     if (flag != 0)
     {
         fprintf(stderr, "create dir error \n");
-        return;
+        exit(-1);
     }
     Path += '/' + _m4s_filename;
     fprintf(stderr, "file path is %s \n ", Path.c_str());
