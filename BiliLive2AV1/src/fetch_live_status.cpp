@@ -258,8 +258,10 @@ void Listening_liveroom_init()
         {
             dirname=std::string(Room["roomid"].GetString());
         }
-        rid.RoomName=(dirname);
-        fprintf(stderr , "_________##############dirname is %s   and  raw data is %s\n",rid.RoomName.c_str(),Room["dirname"].GetString());
+        // rid.RoomName=(dirname);
+        memset(rid.RoomName , 0 , 256);
+        memcpy(rid.RoomName,dirname.c_str(),dirname.size());
+        fprintf(stderr , "_________##############dirname is %s   and  raw data is %s\n",rid.RoomName ,Room["dirname"].GetString());
         
         liveroom_list.push_back(std::move(rid));
 
@@ -338,8 +340,8 @@ void UpdateRoomMsg(LiveHomeStatus & RoomMsg)
             // fprintf(stderr, "entry to req_resp\r\n");
             // size_t Uri_len = strlen(uri);
             resp->get_parsed_body(&body, &body_len);
-            fwrite(body, 1, body_len, stderr);
-            fflush(stderr);
+            // fwrite(body, 1, body_len, stderr);
+            // fflush(stderr);
             // fprintf(stderr, "http req web URI  %s   %d \r\n", uri, Uri_len);
 
             /**
@@ -382,7 +384,7 @@ void UpdateRoomMsg(LiveHomeStatus & RoomMsg)
             RoomMsg.live_status = LiveStatus;
             if (RoomMsg.live_status == 1)
             {
-                fprintf(stderr, "Current Room %s is Running\r\n", RoomMsg.RoomId_chr);
+                // fprintf(stderr, "Current Room %s is Running\r\n", RoomMsg.RoomId_chr);
             }
         };
         std::string website = web_live_status + "?id=" + RoomMsg.RoomId_chr;
@@ -442,7 +444,7 @@ int FreshLiveRoomStatus(LiveHomeStatus *LHS)
         LHS->TransUnit = new m4s2mp4(LHS->FetchM3u8Node, LHS);
     }
     sleep(3);
-    // fprintf(stderr , "------------LHS init Down \n");
+    fprintf(stderr , "------------LHS init Down \n");
     std::string website;
     website.resize(RoomUrlInfo.size() + 256);
     char buff[255];
@@ -538,14 +540,14 @@ int FreshLiveRoomStatus(LiveHomeStatus *LHS)
                     auto codecname = codeEle["codec_name"].GetString();
                     if (strncmp(codecname, "avc", strlen("avc")) != 0)
                         continue;
-                    std::string UrlBase = codeEle["base_url"].GetString();
+                    std::string UrlBase {codeEle["base_url"].GetString()};
                     assert(codeEle["url_info"].IsArray());
                     auto url_info_t = codeEle["url_info"].GetArray();
                     auto url_info = url_info_t.Begin()->GetObject();
                     // fprintf(stderr,"\n######    URLBASE is #####%s###\n",UrlBase.c_str());
-                    LHS->LivingRoomExt->BaseUrl = std::move(UrlBase);
-                    LHS->LivingRoomExt->host = url_info["host"].GetString();
-                    LHS->LivingRoomExt->ExtraUrl = url_info["extra"].GetString();
+                    LHS->LivingRoomExt->host = std::string{ url_info["host"].GetString()};
+                    LHS->LivingRoomExt->BaseUrl = UrlBase;
+                    LHS->LivingRoomExt->ExtraUrl =std::string{ url_info["extra"].GetString()};
                     // fprintf(stderr,"\n######  UNI_URL #####%s###\n",(i.LivingRoomExt->host+i.LivingRoomExt->BaseUrl+i.LivingRoomExt->ExtraUrl).c_str()    );
                     break;
                 }

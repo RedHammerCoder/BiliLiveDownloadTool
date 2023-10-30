@@ -18,7 +18,7 @@ void m4s2mp4::Start()
     fprintf(stderr, "#################------------- m4smp4 start\n");
     _task = [=]()
     {
-        fprintf(stderr, "###----m4s2mp4 ERROR\n");
+        fprintf(stderr, "###----m4s2mp4 Start\n");
         fflush(stderr);
         this->GetM4sList();
         fprintf(stderr, "append msg start\n");
@@ -97,7 +97,6 @@ void m4s2mp4::InitFile()
     const void *ptr = nullptr;
     size_t ptr_len = 0;
     std::string m4sheader = this->m3u8list->GetHeaderFileName();
-    // fprintf(stderr ,)
     assert(m4sheader.size() != 0);
     std::string header_url = this->LiveStatus->GetM4sContent(m4sheader);
     int state = FetchHttpBody(header_url, &ptr, &ptr_len);

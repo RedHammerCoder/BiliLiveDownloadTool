@@ -14,11 +14,12 @@ LiveHomeStatus *LiveStatus;
 
 void Exit()
 {
-    fprintf(stderr , " SubExec Exited  %d",getpid());
+    fprintf(stderr, " SubExec Exited  %d", getpid());
     // (LiveStatus->FetchM3u8Node)->~m3u8fetch();
     // LiveStatus->TransUnit->~m4s2mp4();
     // auto key = LiveStatus->key_id;
     // shmdt((void*)LiveStatus);
+    exit(-1);
 }
 void sigKill(int sig)
 {
@@ -27,10 +28,10 @@ void sigKill(int sig)
 int main(int argc, char **argv)
 {
     // signal(SIGKILL , sigKill);
-    signal(SIGINT,sigKill);
-    fprintf(stderr , "PID %d",getpid());
+    signal(SIGINT, sigKill);
+    fprintf(stderr, "PID %d", getpid());
     fprintf(stderr, "Despatch exec err %s\n", argv[0]);
-    
+
     assert(argc == 1);
     pid_t pid = getpid();
     std::string share_mem(argv[0]);
@@ -53,11 +54,16 @@ int main(int argc, char **argv)
     }
     LiveStatus = (LiveHomeStatus *)target;
     LiveStatus->ProcShared = nullptr;
-    fprintf(stderr , "RoomName \n");
+    fprintf(stderr, "RoomName \n");
     FreshLiveRoomStatus(LiveStatus);
+    sleep(5);
+    m3u8fetchLoop.Start();
+
+    Default_ExecutorManager.Start();
+
     while (1)
     {
-        fprintf(stderr, "Exec in Loop\n");
+        // fprintf(stderr, "Exec in Loop\n");
         sleep(1);
     }
     Exit();

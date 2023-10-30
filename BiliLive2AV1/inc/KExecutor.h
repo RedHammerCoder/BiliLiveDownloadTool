@@ -60,9 +60,11 @@ public:
     {
         _startNode = [&](){ this->_start(); };
         tasksum.store(0);
+        // Start();
     }
     void Start()
     {
+        fprintf(stderr , "ExecutorManager Start to Exec \n");
         std::thread t(_startNode);
         thr = std::move(t);
     }
@@ -93,7 +95,9 @@ private:
     ExecutorManager *_manager;
 
 public:
-    KExecutor(ExecutorManager *manager) : _manager(manager) {}
+    KExecutor(ExecutorManager *manager) : _manager(manager) {
+        fprintf(stderr , "KEX start \n");
+    }
     void SetTask(ExecNode task)
     {
         // _Task=std::move(task);

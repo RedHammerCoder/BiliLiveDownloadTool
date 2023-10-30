@@ -74,6 +74,7 @@ void m3u8fetch::RegisterExecutor()
 
 int m3u8fetch::Parserm3u8(char *ptr, size_t len)
 {
+    fprintf(stderr, "Parserm3u8 Start  \n");
     if(ptr==nullptr && len==0)
     {
         fprintf(stderr, "Parserm3u8 Error  \n");
@@ -113,8 +114,8 @@ int m3u8fetch::Parserm3u8(char *ptr, size_t len)
 #endif
     if(SeqId>this->Max_m4s_nb)
     {
-        fprintf(ERRLOG.Handle,"产生一个缺页 \n");
-        fflush(ERRLOG.Handle);
+        // fprintf(ERRLOG.Handle,"产生一个缺页 \n");
+        // fflush(ERRLOG.Handle);
     }
     if (SeqId < CurrentM3u8file.SeqId)
         return -1;
@@ -163,7 +164,6 @@ UpdateM4slist:
             empty.first = nullptr;
             empty.second = 0;
             // auto & [ref , inserOk]= m4slist.try_emplace(m4sId, std::make_pair<void* , size_t>(nullptr,0));
-
             m4slist.try_emplace(m4sId, std::move(empty));
             // if(*flag)
             continue;
@@ -251,6 +251,7 @@ void SymbleSplite::splitbychar(char _chr)
  */
 int m3u8fetch::SetFetchTask()
 {
+# if 0
     this->free_task();
     fprintf(stderr, "SetFetchTask\n");
     if (Url_m3u8.size() == 0)
@@ -323,6 +324,8 @@ int m3u8fetch::SetFetchTask()
     req->add_header_pair("User-Agent", "Wget/1.14 (linux-gnu)");
     req->add_header_pair("Connection", "close");
     _task = Ktask;
+
+# endif
 }
 
 std::deque<m3u8fetch::BlockPair> m3u8fetch::PopFrontM4sList()
