@@ -51,15 +51,15 @@ public:
     }
     void try_notify()
     {
-        fprintf(stderr , "try notify \n");
+        // fprintf(stderr , "try notify \n");
         if (INC_nb == DEC_nb and AtomicInt == 0 and waitflag == 1)
         {
 
-            fprintf(stderr , "notifyed \n");
+            // fprintf(stderr , "notifyed \n");
             done();
             return ;
         }
-        fprintf(stderr , "Exit   %zu ,%zu\n" ,INC_nb.load(),DEC_nb.load() );
+        // fprintf(stderr , "Exit   %zu ,%zu\n" ,INC_nb.load(),DEC_nb.load() );
     }
 
 public:
@@ -128,7 +128,7 @@ public:
         {
             return;
         }
-        fprintf( stderr , "destry a node %zu\n",(size_t)_syncb->AtomicInt.load());
+        // fprintf( stderr , "destry a node %zu\n",(size_t)_syncb->AtomicInt.load());
         _syncb->Decrease();
         _syncb->try_notify();
     }
@@ -151,10 +151,12 @@ public:
         _syncb = arg._syncb;
         // _syncb=arg._syncb;
         arg._syncb = nullptr;
+        return *this;
     }
     Dispath &operator=(Dispath &&arg)
     {
         _syncb = arg._syncb;
         arg._syncb = nullptr;
+        return *this;
     }
 };
