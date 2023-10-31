@@ -235,6 +235,14 @@ public:
     // void TransCodeWrite();//TODO : ffmpeg 解码并写入文件
 };
 
+
+struct Notifyer {
+std::mutex mtx;
+std::condition_variable cv;
+};
+
+extern struct Notifyer notifyer;
+
 // class UniFetch
 // {
 

@@ -10,6 +10,12 @@
 #include <sys/signal.h>
 #include <sys/types.h>
 
+#include <mutex>
+#include <condition_variable>
+
+
+
+
 LiveHomeStatus *LiveStatus;
 
 void Exit()

@@ -1,11 +1,15 @@
 #include "m4s2mp4.h"
 // #include "m3u8fetch.h"
+#include "basic_class.h"
 #include <assert.h>
 #include <atomic>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <workflow/WFFacilities.h>
 #include <iostream>
+
+
+Notifyer  notifyer;
 
 std::string Default_Path;
 void SetDefaultPath(std::string Path)
@@ -26,9 +30,12 @@ void m4s2mp4::Start()
             fprintf(stderr, "append msg start\n");
             this->AppendMsgBlock();
             fprintf(stderr, "-------##########---------########  append block to disk\n");
-            std::unique_lock<std::mutex> XXX(this->LiveStatus->LivingRoomExt->ConnMtx);
+            // std::unique_lock<std::mutex> XXX(this->LiveStatus->LivingRoomExt->ConnMtx);
+            std::unique_lock uk(notifyer.mtx);
+            notifyer.cv.wait(uk);
             fprintf(stderr, "m4s2mp4 will to wait \n");
             // this->LiveStatus->LivingRoomExt->m4sTrigger.wait(XXX);
+
 sleep(6);
             fprintf(stderr, "m4s2mp4 NOTIFYED \n");
         }

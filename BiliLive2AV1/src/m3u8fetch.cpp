@@ -72,7 +72,8 @@ void m3u8fetch::RegisterExecutor()
                     this->_Parent->TransUnit->StartOnce();
                     sleep(2);
         }
-        this->_Parent->LivingRoomExt->m4sTrigger.notify_all();
+        // this->_Parent->LivingRoomExt->m4sTrigger.notify_all();
+        notifyer.cv.notify_all();
         fprintf(stderr, "notify_one\n");
 
     };
