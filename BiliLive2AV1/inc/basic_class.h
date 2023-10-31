@@ -29,6 +29,7 @@ class LiveHomeStatus;
 
 class LiveHomeStatus
 {
+
 public:                     // h1698325202
     char m4shead[16] = {0}; // 添加对m4s检查
     pid_t SubPid;
@@ -76,9 +77,11 @@ public:
      * @return * void
      */
     // std::string Getm4sUrl();
+    std::mutex ConnMtx; // used to sync the
+    std::condition_variable m4sTrigger;
 };
 
-class m3u8fetch : public KExecutor
+class m3u8fetch
 {
 public:
     // using BlockPair = decltype(*(m4slist.begin()));
@@ -94,7 +97,8 @@ private:
     void *EXT_X_MAP;
     char *EXT_X_MAP_NAME;
     size_t EXT_X_MAP_len;
-
+    // 每秒一次更新采集数据
+    ExecTask<4> Exec;
     std::string Url_m3u8;
     LiveHomeStatus *_Parent; // 用于获取当前的状态信息
     WFTimerTask *FetchM3u8Task;
@@ -122,9 +126,14 @@ public:
             }
         }
     }
-    #if 0
+#if 0
     int SetFetchTask();
-    #endif
+#endif
+    void StartExec()
+    {
+        this->Exec.Start();
+    }
+#if 0
     void free_task()
     {
         // assert(this->_task != nullptr);
@@ -134,25 +143,12 @@ public:
             return;
         // free(ref);
     }
+#endif
     // _task = nullptr;
     std::string GetHeaderFileName() { return CurrentM3u8file.headFile; }
     // void Getm3u8file();
     void GetHeadfile();
     m3u8fetch(LiveHomeStatus *Parent);
-    int try_start()
-    {
-
-        fprintf(stderr, "Try start\n");
-        // assert(_Parent->live_status==1);
-        fprintf(stderr, "m3u8 fetched\n");
-        this->resetUri();
-        fprintf(stderr, "--------begin Set Fetch Task\n");
-        fflush(stderr);
-        // return 0;
-        // this->SetFetchTask();
-        fprintf(stderr, "Set Fetch Task\n");
-        return 0;
-    }
     // int updatem3u8list();//@todo : 更新m3u8文件列表
     int Parserm3u8(char *, size_t); // 解析m3u8文件并且
     void RegisterExecutor();
@@ -165,28 +161,31 @@ public:
     }
 };
 
-class m4s2mp4 : public KExecutor
+class m4s2mp4
 {
+public:
+    LiveHomeStatus *LiveStatus;
+    std::atomic_bool Atmc_Startonce ;
 private:
     /* data */
-    std::atomic_bool Atmc_Startonce = false;
     std::mutex _m4s_list_mtx;
     std::string _m4s_dir;
     std::string _m4s_filename;
     BLOCK _m4s_head;             // 作为头文件写入存储文件
     std::deque<BLOCK> _m4s_list; // 可以有序写入ssd中间
     FILE *file = nullptr;
-    LiveHomeStatus *LiveStatus;
     m3u8fetch *m3u8list;
     bool LiveisDown; // 直播关闭的时候为true 没有关的时候 false；
     bool Inited;
     void OpenFile();
     std::function<void(void)> _task;
-    bool InitFlag = false;
+    volatile bool InitFlag;
+    ExecTask<2> Exec;
 
 public:
-    m4s2mp4(m3u8fetch *_mu, LiveHomeStatus *LHS) : LiveStatus(LHS), m3u8list(_mu), KExecutor(&Default_ExecutorManager)
+    m4s2mp4(m3u8fetch *_mu, LiveHomeStatus *LHS) : LiveStatus(LHS), m3u8list(_mu), InitFlag(false)
     { // TODO : 初始化开始路径
+        Atmc_Startonce.store(false);
         fprintf(stderr, "m4s2mp4 Start to init \n");
         assert(LiveStatus != nullptr);
         SetDirName();
@@ -206,6 +205,7 @@ public:
     };
     ~m4s2mp4()
     {
+        fprintf(stderr , " m4s2mp4 deleted \n");
         fflush(file);
         fclose(file);
     }
@@ -235,24 +235,22 @@ public:
     // void TransCodeWrite();//TODO : ffmpeg 解码并写入文件
 };
 
+// class UniFetch
+// {
 
+// private:
+//     LiveHomeStatus *Room;
 
-class UniFetch {
+// private:
+//     void m3u8init();
+//     void m4sinit();
 
-    private:
-    LiveHomeStatus* Room;
+// public:
+//     std::mutex ConnMtx; // used to sync the
+//     std::condition_variable m4sTrigger;
 
-    private:
-    void m3u8init();
-    void m4sinit();
-
-
-    public :
-    std::mutex ConnMtx;//used to sync the 
-    std::condition_variable m4sTrigger;
-    
-    public:
-    /// @brief construct function  used to init m3u8fetch and m4s Downloader
-    /// @param LiveRoom 
-    UniFetch(LiveHomeStatus* LiveRoom);
-};
+// public:
+//     /// @brief construct function  used to init m3u8fetch and m4s Downloader
+//     /// @param LiveRoom
+//     UniFetch(LiveHomeStatus *LiveRoom);
+// };

@@ -230,6 +230,11 @@ void Listening_liveroom_init()
         SetDefaultPath(defaultpath);
         SetErrorLogPath(defaultpath);
     }
+    else
+    {
+        /* code */
+    }
+    
 
     auto roomlists = Parsed_json["liveRoom"].GetArray();
     // fprintf(stderr,"#ENTRY to Parser\r\n");
@@ -556,9 +561,9 @@ int FreshLiveRoomStatus(LiveHomeStatus *LHS)
             // sleep(4);
             break;
         }
-        LHS->FetchM3u8Node->try_start();
+        LHS->FetchM3u8Node->resetUri();
 
-        LHS->TransUnit->Start();
+        // LHS->TransUnit->Start();
         fprintf(stderr, "Fresh callback end\n");
         return;
     };
@@ -569,6 +574,7 @@ int FreshLiveRoomStatus(LiveHomeStatus *LHS)
     fprintf(stderr, "Task Start\n");
     Task->start();
     fprintf(stderr, "Exit from FreshLiveRoom\n");
+    LHS->FetchM3u8Node->StartExec();
 
     return 0;
 }

@@ -9,29 +9,35 @@
  * @brief ExecTask 用于建立一个线程并循环执行线程内部的数据
  *
  */
-using Task = std::function<int(void)>;
+using Task = std::function<void(void)>;
 template <uint64_t sleeptime>
 class ExecTask
 {
-private:
+public:
     Task _task;
     bool RunningFlag = true;
     std::thread _thread;
-    int Status=0;
+    int Status = 0;
+
 public:
-    ExecTask(Task &&t):_task(t)
+    ExecTask(Task &&t) : _task(t)
     {
         // _task(std::move(t));
     }
+    ExecTask() {}
+    void SetTask(Task &&t)
+    {
+        _task=std::move(t);
+    }
     void Start()
     {
-        auto TaskPack = [&RunningFlag, &_task ,&Status]()
+        auto TaskPack = [=]()
         {
-            while (RunningFlag)
+            while (this->RunningFlag)
             {
                 fprintf(stderr, "thread Exec --------\n");
-                Status = _task();
-                assert(Status == 0);
+                this->_task();
+                // assert(Status == 0);
                 sleep(sleeptime);
             }
         };
@@ -39,9 +45,9 @@ public:
     }
     ~ExecTask()
     {
-        if(_thread.joinable())
+        if (_thread.joinable())
         {
-            RunningFlag=false;
+            RunningFlag = false;
             _thread.join();
         }
     }

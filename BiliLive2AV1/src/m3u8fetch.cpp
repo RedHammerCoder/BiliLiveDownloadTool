@@ -9,18 +9,15 @@
 #include "ErrorLog.h"
 #include "fetch_live_status.h"
 
-const char * ZeroStr = "\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0";
+const char *ZeroStr = "\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0";
 constexpr size_t unusedLen = strlen("#EXTM3U\n#EXT-X-VERSION:7\n#EXT-X-START:TIME-OFFSET=0\n");
 constexpr int TargDurLen = strlen("#EXT-X-TARGETDURATION");
 constexpr int MapUrILen = strlen("#EXT-X-MAP:URI");
 constexpr int EXTINF = strlen("#EXTINF:");
 
-m3u8fetch::m3u8fetch(LiveHomeStatus *parent) : _Parent(parent), KExecutor(&m3u8fetchLoop)
+m3u8fetch::m3u8fetch(LiveHomeStatus *parent) : _Parent(parent)
 {
-    // FetchM3u8Task = WFTaskFactory::create_http_task()
     fprintf(stderr, "  ### ### ###   m3u8 analysisd");
-    // this->SetFetchTask();
-    // assert(_task != nullptr);
     _task = nullptr;
     RegisterExecutor();
 }
@@ -50,38 +47,48 @@ void m3u8fetch::RegisterExecutor()
             state = FetchHttpBody(this->Url_m3u8, &ptr, &ptr_len);
         } while (state != WFT_STATE_SUCCESS);
         int stat = this->Parserm3u8((char *)ptr, ptr_len);
-
-        if(  strncmp( this->_Parent->m4shead ,ZeroStr , strlen(ZeroStr))==0 )
+#if 1
+        // assert(this->CurrentM3u8file.headFile.size() == strlen(ZeroStr));
+        if (strncmp(this->_Parent->m4shead, ZeroStr, strlen(this->_Parent->m4shead)) == 0)
         {
-           memcpy(this->_Parent->m4shead  ,this->CurrentM3u8file.headFile.c_str() , this->CurrentM3u8file.headFile.size());
-        }else
+            memcpy(this->_Parent->m4shead, this->CurrentM3u8file.headFile.c_str(), this->CurrentM3u8file.headFile.size());
+        }
+        else
         {
-            if(this->CurrentM3u8file.headFile != std::string(this->_Parent->m4shead) )
+            if (this->CurrentM3u8file.headFile != std::string(this->_Parent->m4shead))
             {
                 raise(SIGINT);
             }
         }
+#endif
         fprintf(stderr, "Parserm3u8ing \n");
-        if (stat != 0 )
-        { 
+        if (stat != 0)
+        {
             return;
         }
-        this->_Parent->TransUnit->StartOnce();
+        assert(this->CurrentM3u8file.headFile.size()!=0);
+        if(this->_Parent->TransUnit->Atmc_Startonce.load()==false)
+        {
+                    this->_Parent->TransUnit->StartOnce();
+                    sleep(2);
+        }
+        this->_Parent->LivingRoomExt->m4sTrigger.notify_all();
+        fprintf(stderr, "notify_one\n");
+
     };
-    KExecutor::SetTask(tsk);
-    UploadNode();
+
+    this->Exec.SetTask(std::move(tsk));
 }
 
 int m3u8fetch::Parserm3u8(char *ptr, size_t len)
 {
     fprintf(stderr, "Parserm3u8 Start  \n");
-    if(ptr==nullptr && len==0)
+    if (ptr == nullptr && len == 0)
     {
         fprintf(stderr, "Parserm3u8 Error  \n");
-        fprintf(ERRLOG.Handle , "Parserm3u8 body len is zero \n");
+        fprintf(ERRLOG.Handle, "Parserm3u8 body len is zero \n");
         fflush(ERRLOG.Handle);
         return -2;
-
     }
     std::string line;
     std::stringstream ss;
@@ -112,7 +119,7 @@ int m3u8fetch::Parserm3u8(char *ptr, size_t len)
 #ifdef Debug
     // goto UpdateM4slist;
 #endif
-    if(SeqId>this->Max_m4s_nb)
+    if (SeqId > this->Max_m4s_nb)
     {
         // fprintf(ERRLOG.Handle,"产生一个缺页 \n");
         // fflush(ERRLOG.Handle);
@@ -156,7 +163,10 @@ UpdateM4slist:
             ss >> line;
             sscanf(line.c_str(), "%lld.m4s", &m4sId);
 
-            if(m4sId<=this->Max_m4s_nb){continue;}
+            if (m4sId <= this->Max_m4s_nb)
+            {
+                continue;
+            }
             this->Max_m4s_nb = (this->Max_m4s_nb > m4sId ? this->Max_m4s_nb : m4sId);
             // fprintf(stderr, "m4s is %lld", m4sId);
             std::cout << "m4s is" << m4sId << ".m4s" << std::endl;
@@ -245,9 +255,7 @@ void SymbleSplite::splitbychar(char _chr)
 
 #endif
 
-
-
-# if 0
+#if 0
 
 /**
  * @brief 用于获取并解析m3u8文件
@@ -329,8 +337,8 @@ int m3u8fetch::SetFetchTask()
     req->add_header_pair("Connection", "close");
     _task = Ktask;
 
-# endif
 }
+#endif
 
 std::deque<m3u8fetch::BlockPair> m3u8fetch::PopFrontM4sList()
 {

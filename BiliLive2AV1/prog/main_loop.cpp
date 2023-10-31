@@ -5,6 +5,7 @@
 #include "fetch_live_status.h"
 #include "string"
 #include "sstream"
+#include "m4s2mp4.h"
 #include <sys/signal.h>
 #include <sys/types.h>
 #include <new>
@@ -116,7 +117,8 @@ int main(int argc, char **argv)
                     fprintf(stderr, "get shared mem key %s \n", key_id.c_str());
                     char buff[16] = {0};
                     sprintf(buff, key_id.c_str());
-                    int id = execl("./main_despatch", buff);
+                    
+                    int id = execl("./main_despatch", buff  , Default_Path.c_str() );
                 }
                 if (pt > 0)
                 { // it is parsent process
@@ -134,9 +136,10 @@ int main(int argc, char **argv)
                 ref.ProcShared->live_status = 0;
             }
             // kill(ref.SubPid, SIGINT);
-            *(ref.ProcShared) = ref;
         }
         sleep(10); // 睡眠20s
+        fprintf(stderr, " mian loop\n");
+
     }
 
     return 0;

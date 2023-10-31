@@ -24,13 +24,17 @@ void m4s2mp4::Start()
         fprintf(stderr, "append msg start\n");
         this->AppendMsgBlock();
         fprintf(stderr, "-------##########---------########  append block to disk\n");
+        std::unique_lock<std::mutex> lk(this->LiveStatus->LivingRoomExt->ConnMtx);
+        fprintf(stderr, "m4s2mp4 will to wait \n");
+        this->LiveStatus->LivingRoomExt->m4sTrigger.wait(lk);
+        fprintf(stderr, "m4s2mp4 NOTIFYED \n");
     };
 
     if (InitFlag == false)
     {
         InitFile();
-        KExecutor::SetTask(_task);
-        KExecutor::UploadNode();
+        Exec.SetTask(std::move(_task));
+        Exec.Start();
     }
 
     fprintf(stderr, "ready to update node\n");
@@ -38,6 +42,10 @@ void m4s2mp4::Start()
 
 void m4s2mp4::StartOnce()
 {
+    if (Atmc_Startonce == true)
+    {
+        return;
+    }
     bool flg = Atmc_Startonce.exchange(true);
     if (flg == true)
     {
@@ -74,7 +82,7 @@ recheck:
 void m4s2mp4::InitFile()
 {
     // if (file == nullptr)
-    fprintf(stderr , "InitFileing\n");
+    fprintf(stderr, "InitFileing\n");
     assert(InitFlag == false);
     assert(file == nullptr);
     assert(_m4s_filename.size() != 0);
@@ -100,6 +108,7 @@ void m4s2mp4::InitFile()
     std::string m4sheader = this->m3u8list->GetHeaderFileName();
     assert(m4sheader.size() != 0);
     std::string header_url = this->LiveStatus->GetM4sContent(m4sheader);
+    fprintf(stderr, "header_url is  %s\n", header_url.c_str());
     int state = FetchHttpBody(header_url, &ptr, &ptr_len);
     if (state != WFT_STATE_SUCCESS)
     {
@@ -111,8 +120,7 @@ void m4s2mp4::InitFile()
     fflush(file);
     free((void *)ptr);
     InitFlag = true;
-    fprintf(stderr , "InitFile Done\n");
-
+    fprintf(stderr, "InitFile Done\n");
 }
 
 void m4s2mp4::GetM4sList()
@@ -125,17 +133,12 @@ void m4s2mp4::GetM4sList()
     m4slist = this->m3u8list->PopFrontM4sList();
 
     std::atomic_int64_t RemainTask_nb = 0; // 用于记录正在执行的http req数目
-
-    WFFacilities::WaitGroup wg(1);
     std::deque<WFHttpTask *> freelist;
     SyncBarrier fs;
 
     for (auto &ref : m4slist)
     {
-        /**
-         * @todo : 遍历m4slist 并且依据id发出http req  将返回后的block 写入Block
-         *
-         */
+        fprintf(stderr, "GetM4sList Loop\n");
 
         RemainTask_nb.fetch_add(1);
         auto &Kvalue = ref.second;
@@ -153,10 +156,6 @@ void m4s2mp4::GetM4sList()
         {
             // auto dic = disp;
             assert(dic.IsSecurt() == false);
-            // dic.Destroy();
-            // assert(disp.IsSecurt()==true);
-
-            // auto tmp = fs.dispath();
             fprintf(stderr, "start to fetch m4sdoc\n");
             auto req = task->get_req();
             auto resp = task->get_resp();
@@ -259,7 +258,7 @@ void m4s2mp4::AppendMsgBlock()
         // fprintf(stderr , "Block len : %d",blk);
         if (ptr == nullptr)
         {
-            fprintf(stderr , "ptr is nullptr \n");
+            fprintf(stderr, "ptr is nullptr \n");
             assert(len == 0);
             continue;
         }
