@@ -34,7 +34,7 @@ void m4s2mp4::Start()
             std::unique_lock uk(notifyer.mtx);
             notifyer.cv.wait(uk);
             fprintf(stderr, "m4s2mp4 will to wait \n");
-            // this->LiveStatus->LivingRoomExt->m4sTrigger.wait(XXX);
+            // this->LiveStatus->LivingRoomExt->.wait(XXX);
 
 sleep(6);
             fprintf(stderr, "m4s2mp4 NOTIFYED \n");

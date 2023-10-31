@@ -94,7 +94,7 @@ int main(int argc, char **argv)
             // 已经完成初始化
             // TODO: 开始获取直播间信息
             UpdateRoomMsg(ref);
-            if (ref.live_status == 1 && ref.ProcShared->live_status == 0)
+            if (ref.live_status == 1 && ref.live_status_old==0)
             {
                 // 子进程负责设置ref.live_status_old为1
 
@@ -133,8 +133,8 @@ int main(int argc, char **argv)
             {
                 // TODO: kill sub proc;
                 fprintf(stderr, "start to kill sub Proc \n");
-                ref.ProcShared->live_status = 0;
-            }
+                kill(ref.SubPid , SIGKILL);
+                            }
             // kill(ref.SubPid, SIGINT);
         }
         sleep(10); // 睡眠20s

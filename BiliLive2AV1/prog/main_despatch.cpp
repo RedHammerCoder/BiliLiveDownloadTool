@@ -13,10 +13,18 @@
 #include <mutex>
 #include <condition_variable>
 
+LiveHomeStatus *LiveStatus=nullptr;
 
+void Sigsicide(int sig)
+{
+    if(LiveStatus!=nullptr)
+    {
+        LiveStatus->live_status=0;
+        LiveStatus->live_status_old=1;
+    }
+}
 
-
-LiveHomeStatus *LiveStatus;
+// LiveHomeStatus *LiveStatus;
 
 void Exit()
 {
@@ -60,17 +68,14 @@ int main(int argc, char **argv)
         exit(-1);
     }
     LiveStatus = (LiveHomeStatus *)target;
-    LiveStatus->ProcShared = nullptr;
-    fprintf(stderr, "RoomName \n");
+    LiveStatus->SubPid=getpid();
     FreshLiveRoomStatus(LiveStatus);
     sleep(5);
     // m3u8fetchLoop.Start();
 
     // Default_ExecutorManager.Start();
-fprintf(stderr, "Despatch in Loop\n");
     while (1)
     {
-        fprintf(stderr, "Despatch in Loop\n");
         sleep(20);
     }
     Exit();

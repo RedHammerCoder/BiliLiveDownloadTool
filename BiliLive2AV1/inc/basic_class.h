@@ -76,9 +76,6 @@ public:
      *
      * @return * void
      */
-    // std::string Getm4sUrl();
-    std::mutex ConnMtx; // used to sync the
-    std::condition_variable m4sTrigger;
 };
 
 class m3u8fetch
@@ -86,7 +83,6 @@ class m3u8fetch
 public:
     // using BlockPair = decltype(*(m4slist.begin()));
     using BlockPair = std::pair<uint64_t, std::pair<void *, size_t>>;
-
 private:
     /* data */
     std::mutex mtx_m4s;                                    // if want to modify m4slist , the first thing is get this lock;
@@ -191,17 +187,6 @@ public:
         SetDirName();
         SetFilename();
         fprintf(stderr, "m4s2mp4 Start to init \n");
-
-        // InitFile();
-#if 0
-        _task = [&](){
-            this->GetM4sList();
-            this->AppendMsgBlock();
-            fprintf(stderr,"append block to disk\n");
-        };
-        KExecutor::SetTask(_task);
-        KExecutor::UploadNode();
-#endif
     };
     ~m4s2mp4()
     {
@@ -242,23 +227,3 @@ std::condition_variable cv;
 };
 
 extern struct Notifyer notifyer;
-
-// class UniFetch
-// {
-
-// private:
-//     LiveHomeStatus *Room;
-
-// private:
-//     void m3u8init();
-//     void m4sinit();
-
-// public:
-//     std::mutex ConnMtx; // used to sync the
-//     std::condition_variable m4sTrigger;
-
-// public:
-//     /// @brief construct function  used to init m3u8fetch and m4s Downloader
-//     /// @param LiveRoom
-//     UniFetch(LiveHomeStatus *LiveRoom);
-// };
