@@ -244,29 +244,28 @@ void Listening_liveroom_init()
         LiveHomeStatus rid;
         rid.RoomId = Int_Roomid;
         memcpy(rid.RoomId_chr, chr_roomid, strlen(chr_roomid));
-        
+
         std::string dirname;
-        if(Room.HasMember("dirname"))
+        if (Room.HasMember("dirname"))
         {
             // dirname=std::string(Room["dirname"].GetString(),Room["dirname"].GetStringLength());
             const char *dir = Room["dirname"].GetString();
             size_t dirlen = Room["dirname"].GetStringLength();
-            std::string dirstr(dir,dirlen);
-            dirname=std::move(dirstr);
-
-        }else
+            std::string dirstr(dir, dirlen);
+            dirname = std::move(dirstr);
+        }
+        else
         {
-            dirname=std::string(Room["roomid"].GetString());
+            dirname = std::string(Room["roomid"].GetString());
         }
         // rid.RoomName=(dirname);
-        memset(rid.RoomName , 0 , 256);
-        memcpy(rid.RoomName,dirname.c_str(),dirname.size());
-        fprintf(stderr , "_________##############dirname is %s   and  raw data is %s\n",rid.RoomName ,Room["dirname"].GetString());
-        
-        liveroom_list.push_back(std::move(rid));
+        memset(rid.RoomName, 0, 256);
+        memcpy(rid.RoomName, dirname.c_str(), dirname.size());
+        fprintf(stderr, "_________##############dirname is %s   and  raw data is %s\n", rid.RoomName, Room["dirname"].GetString());
 
+        liveroom_list.push_back(std::move(rid));
     }
-        // fprintf(stderr,"End Of Get Live Room \r\n");
+    // fprintf(stderr,"End Of Get Live Room \r\n");
     free(block);
 }
 
@@ -288,120 +287,120 @@ void GetliveStatus(const char *Liveaddr)
 }
 #endif
 
-void UpdateRoomMsg(LiveHomeStatus & RoomMsg)
+void UpdateRoomMsg(LiveHomeStatus &RoomMsg)
 {
     SyncBarrier syncB;
     // syncB.dispath
-        // auto kak= syncB.dispath();
-        auto task_callback = [ &syncB  ,&RoomMsg](WFHttpTask *task)
+    // auto kak= syncB.dispath();
+    auto task_callback = [&syncB, &RoomMsg](WFHttpTask *task)
+    {
+        // sleep(3);
+        Dispath disp = syncB.dispath();
+        protocol::HttpRequest *req = task->get_req();
+        protocol::HttpResponse *resp = task->get_resp();
+        int state = task->get_state();
+        int error = task->get_error();
+
+        switch (state)
         {
-            // sleep(3);
-            Dispath disp  =syncB.dispath();
-            protocol::HttpRequest *req = task->get_req();
-            protocol::HttpResponse *resp = task->get_resp();
-            int state = task->get_state();
-            int error = task->get_error();
+        case WFT_STATE_SYS_ERROR:
+            fprintf(stderr, "system error: %s\n", strerror(error));
+            break;
+        case WFT_STATE_DNS_ERROR:
+            fprintf(stderr, "DNS error: %s\n", gai_strerror(error));
+            break;
+        case WFT_STATE_SSL_ERROR:
+            fprintf(stderr, "SSL error: %d\n", error);
+            break;
+        case WFT_STATE_TASK_ERROR:
+            fprintf(stderr, "Task error: %d\n", error);
+            break;
+        case WFT_STATE_SUCCESS:
+            break;
+        }
 
-            switch (state)
-            {
-            case WFT_STATE_SYS_ERROR:
-                fprintf(stderr, "system error: %s\n", strerror(error));
-                break;
-            case WFT_STATE_DNS_ERROR:
-                fprintf(stderr, "DNS error: %s\n", gai_strerror(error));
-                break;
-            case WFT_STATE_SSL_ERROR:
-                fprintf(stderr, "SSL error: %d\n", error);
-                break;
-            case WFT_STATE_TASK_ERROR:
-                fprintf(stderr, "Task error: %d\n", error);
-                break;
-            case WFT_STATE_SUCCESS:
-                break;
-            }
+        if (state != WFT_STATE_SUCCESS)
+        {
+            fprintf(stderr, "Failed. Press Ctrl-C to exit.\n");
+            return;
+        }
+        size_t body_len = 0;
+        const void *body = nullptr;
+        std::string name;
+        std::string value;
+        int statuscode = strncmp(resp->get_status_code(), "200", 3);
+        int reason_phrase = strncmp(resp->get_reason_phrase(), "OK", 2);
+        if (statuscode != 0 || reason_phrase != 0)
+        {
+            fprintf(stderr, "%s\r\n", "status code OR reason_phrase ERROR\n");
+            return;
+        }
+        // auto uri = req->get_request_uri();
+        // fprintf(stderr, "entry to req_resp\r\n");
+        // size_t Uri_len = strlen(uri);
+        resp->get_parsed_body(&body, &body_len);
+        // fwrite(body, 1, body_len, stderr);
+        // fflush(stderr);
+        // fprintf(stderr, "http req web URI  %s   %d \r\n", uri, Uri_len);
 
-            if (state != WFT_STATE_SUCCESS)
-            {
-                fprintf(stderr, "Failed. Press Ctrl-C to exit.\n");
-                return;
-            }
-            size_t body_len = 0;
-            const void *body = nullptr;
-            std::string name;
-            std::string value;
-            int statuscode = strncmp(resp->get_status_code(), "200", 3);
-            int reason_phrase = strncmp(resp->get_reason_phrase(), "OK", 2);
-            if (statuscode != 0 || reason_phrase != 0)
-            {
-                fprintf(stderr, "%s\r\n", "status code OR reason_phrase ERROR\n");
-                return;
-            }
-            // auto uri = req->get_request_uri();
-            // fprintf(stderr, "entry to req_resp\r\n");
-            // size_t Uri_len = strlen(uri);
-            resp->get_parsed_body(&body, &body_len);
-            // fwrite(body, 1, body_len, stderr);
-            // fflush(stderr);
-            // fprintf(stderr, "http req web URI  %s   %d \r\n", uri, Uri_len);
-
-            /**
-             * @todo parsering message from body with json formates
-             * and 获取msg中间的信息来判断直播间数据 如果数据合适
-             *
-             */
-            Document StatusJson;
-            StatusJson.Parse((const char *)body, body_len);
-            // fprintf(stderr, "Parsered Done");
-            if (!StatusJson.HasMember("msg"))
-            {
-                fprintf(stderr, "########---------Json Parser Error");
-                exit(-1);
-            }
-            assert(StatusJson["msg"].IsString());
-            const char *msg(StatusJson["msg"].GetString());
-            // fprintf(stderr, "Msg Status is  %s", msg);
-            if (strncmp(msg, "ok", 2) != 0)
-            {
-                fprintf(stderr, "Live Room Status Error , Msg not OK");
-                exit(-1);
-            }
-            /**
-             * @todo 添加trigger 以便在直播结束的时候执行清除任务
-             *
-             */
-            assert(StatusJson["data"].IsObject());
-            auto DataObj = StatusJson["data"].GetObject();
-            uint64_t RoomId = DataObj["room_id"].GetUint64();
-            int short_id = DataObj["short_id"].GetInt();
-            int64_t Live_time = DataObj["live_time"].GetInt64();
-            int LiveStatus = DataObj["live_status"].GetInt();
-            bool is_locked = DataObj["is_locked"].GetBool();
-            if (is_locked == true)
-                return;
-            if (short_id != 0)
-                RoomId = short_id;
-            assert(RoomMsg.RoomId == RoomId);
-            RoomMsg.live_status = LiveStatus;
-            if (RoomMsg.live_status == 1)
-            {
-                // fprintf(stderr, "Current Room %s is Running\r\n", RoomMsg.RoomId_chr);
-            }
-        };
-        std::string website = web_live_status + "?id=" + RoomMsg.RoomId_chr;
-        // std::cout << "website add is " << website << std::endl;
-
-        auto task = WFTaskFactory::create_http_task(website, REDIRECT_MAX, RETRY_MAX, task_callback);
-        // auto task = WFTaskFactory::create_http_task()
-        auto req = task->get_req();
-        req->add_header_pair("Accept", "*/*");
-        req->add_header_pair("User-Agent", "Mozilla/5.0");
-        // fprintf(stderr, "end to dispath\n");
-        task->start();
         /**
-         * @todo : 添加强制性检查 ； 保证所有task都完成后才返回
+         * @todo parsering message from body with json formates
+         * and 获取msg中间的信息来判断直播间数据 如果数据合适
          *
          */
-        // fprintf(stderr, "Upate RoomList\n");
+        Document StatusJson;
+        StatusJson.Parse((const char *)body, body_len);
+        // fprintf(stderr, "Parsered Done");
+        if (!StatusJson.HasMember("msg"))
+        {
+            fprintf(stderr, "########---------Json Parser Error");
+            exit(-1);
+        }
+        assert(StatusJson["msg"].IsString());
+        const char *msg(StatusJson["msg"].GetString());
+        // fprintf(stderr, "Msg Status is  %s", msg);
+        if (strncmp(msg, "ok", 2) != 0)
+        {
+            fprintf(stderr, "Live Room Status Error , Msg not OK");
+            exit(-1);
+        }
+        /**
+         * @todo 添加trigger 以便在直播结束的时候执行清除任务
+         *
+         */
+        assert(StatusJson["data"].IsObject());
+        auto DataObj = StatusJson["data"].GetObject();
+        uint64_t RoomId = DataObj["room_id"].GetUint64();
+        int short_id = DataObj["short_id"].GetInt();
+        int64_t Live_time = DataObj["live_time"].GetInt64();
+        int LiveStatus = DataObj["live_status"].GetInt();
+        bool is_locked = DataObj["is_locked"].GetBool();
+        if (is_locked == true)
+            return;
+        if (short_id != 0)
+            RoomId = short_id;
+        assert(RoomMsg.RoomId == RoomId);
+        RoomMsg.live_status = LiveStatus;
+        if (RoomMsg.live_status == 1)
+        {
+            // fprintf(stderr, "Current Room %s is Running\r\n", RoomMsg.RoomId_chr);
+        }
+    };
+    std::string website = web_live_status + "?id=" + RoomMsg.RoomId_chr;
+    // std::cout << "website add is " << website << std::endl;
+
+    auto task = WFTaskFactory::create_http_task(website, REDIRECT_MAX, RETRY_MAX, task_callback);
+    // auto task = WFTaskFactory::create_http_task()
+    auto req = task->get_req();
+    req->add_header_pair("Accept", "*/*");
+    req->add_header_pair("User-Agent", "Mozilla/5.0");
+    // fprintf(stderr, "end to dispath\n");
+    task->start();
+    /**
+     * @todo : 添加强制性检查 ； 保证所有task都完成后才返回
+     *
+     */
+    // fprintf(stderr, "Upate RoomList\n");
     syncB.wait();
     // fprintf(stderr, "Exit from Update Room list\n");
     return;
@@ -409,7 +408,7 @@ void UpdateRoomMsg(LiveHomeStatus & RoomMsg)
 
 void UpdateRoomListMsg()
 {
-    for(auto & ref : liveroom_list)
+    for (auto &ref : liveroom_list)
     {
         UpdateRoomMsg(ref);
     }
@@ -444,14 +443,14 @@ int FreshLiveRoomStatus(LiveHomeStatus *LHS)
         LHS->TransUnit = new m4s2mp4(LHS->FetchM3u8Node, LHS);
     }
     sleep(3);
-    fprintf(stderr , "------------LHS init Down \n");
+    fprintf(stderr, "------------LHS init Down \n");
     std::string website;
     website.resize(RoomUrlInfo.size() + 256);
     char buff[255];
     memset(buff, 0, 256);
     sprintf(buff, "?room_id=%lld&protocol=0,1&format=0,1,2&codec=0,1&qn=10000&platform=h5&ptype=8", LHS->RoomId);
     website = RoomUrlInfo + buff;
-    fprintf(stderr ,"website : %s\n",website.c_str());
+    fprintf(stderr, "website : %s\n", website.c_str());
     auto http_callback = [=](WFHttpTask *task)
     {
         fprintf(stderr, "http callback\n");
@@ -460,9 +459,10 @@ int FreshLiveRoomStatus(LiveHomeStatus *LHS)
 
             fprintf(stderr, "####---------####Room  is Running\r\n");
         }
-        #ifdef Debug
-        if(LHS->live_status!=1)exit(-1);
-        #endif
+#ifdef Debug
+        if (LHS->live_status != 1)
+            exit(-1);
+#endif
         protocol::HttpRequest *req = task->get_req();
         protocol::HttpResponse *resp = task->get_resp();
         int state = task->get_state();
@@ -540,14 +540,14 @@ int FreshLiveRoomStatus(LiveHomeStatus *LHS)
                     auto codecname = codeEle["codec_name"].GetString();
                     if (strncmp(codecname, "avc", strlen("avc")) != 0)
                         continue;
-                    std::string UrlBase {codeEle["base_url"].GetString()};
+                    std::string UrlBase{codeEle["base_url"].GetString()};
                     assert(codeEle["url_info"].IsArray());
                     auto url_info_t = codeEle["url_info"].GetArray();
                     auto url_info = url_info_t.Begin()->GetObject();
                     // fprintf(stderr,"\n######    URLBASE is #####%s###\n",UrlBase.c_str());
-                    LHS->LivingRoomExt->host = std::string{ url_info["host"].GetString()};
+                    LHS->LivingRoomExt->host = std::string{url_info["host"].GetString()};
                     LHS->LivingRoomExt->BaseUrl = UrlBase;
-                    LHS->LivingRoomExt->ExtraUrl =std::string{ url_info["extra"].GetString()};
+                    LHS->LivingRoomExt->ExtraUrl = std::string{url_info["extra"].GetString()};
                     // fprintf(stderr,"\n######  UNI_URL #####%s###\n",(i.LivingRoomExt->host+i.LivingRoomExt->BaseUrl+i.LivingRoomExt->ExtraUrl).c_str()    );
                     break;
                 }
@@ -556,8 +556,9 @@ int FreshLiveRoomStatus(LiveHomeStatus *LHS)
             // sleep(4);
             break;
         }
-        // LHS->TransUnit->Start();
         LHS->FetchM3u8Node->try_start();
+
+        LHS->TransUnit->Start();
         fprintf(stderr, "Fresh callback end\n");
         return;
     };
@@ -569,7 +570,6 @@ int FreshLiveRoomStatus(LiveHomeStatus *LHS)
     Task->start();
     fprintf(stderr, "Exit from FreshLiveRoom\n");
 
-
     return 0;
 }
 
@@ -578,7 +578,7 @@ void LivingRoomIndexAnalysisNew()
     fprintf(stderr, "\r\nEntry to Room ANA\r\n");
     for (auto &i : liveroom_list)
     {
-        fprintf(stderr , "##__ todo fresh\n");
+        fprintf(stderr, "##__ todo fresh\n");
         // if(i.live_status!=1)
         // {
         //     // fprintf(stderr , "\nLIve ERROR  ----------------------------------------\n");
@@ -586,12 +586,12 @@ void LivingRoomIndexAnalysisNew()
         // }
         // fprintf(stderr,"--------------ggggggggggggggg------------------\n");
         int id = FreshLiveRoomStatus(&i);
-        if(id==-1)
+        if (id == -1)
         {
-            fprintf(stderr ,"Fresh LiveRoomError\n");
+            fprintf(stderr, "Fresh LiveRoomError\n");
         }
     }
-    fprintf(stderr , "#####Exit LivingRoomAna #####\n");
+    fprintf(stderr, "#####Exit LivingRoomAna #####\n");
 }
 #if 0
 void LivingRoomIndexAnalysis()
@@ -805,7 +805,7 @@ std::string LiveHomeStatus::GetM4sUrl(uint64_t m4s_id)
         return std::string();
     std::stringstream ss;
     std::string m4s_id_str;
-    ss << m4s_id<<".m4s";
+    ss << m4s_id << ".m4s";
     ss >> m4s_id_str;
     return GetM4sContent(m4s_id_str);
 #if 0
@@ -827,7 +827,7 @@ int FetchHttpBody(const std::string uri, const void **ptr, size_t *len)
     SyncBarrier syb;
     // auto Kseed= syb.dispath();
     int state = 0;
-    auto task_callback = [ &ptr, &len, &state , sed{syb.dispath()}](WFHttpTask *task)
+    auto task_callback = [&ptr, &len, &state, sed{syb.dispath()}](WFHttpTask *task)
     {
         printf("entry to resp\n");
         auto req = task->get_req();

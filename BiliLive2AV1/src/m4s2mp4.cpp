@@ -74,6 +74,7 @@ recheck:
 void m4s2mp4::InitFile()
 {
     // if (file == nullptr)
+    fprintf(stderr , "InitFileing\n");
     assert(InitFlag == false);
     assert(file == nullptr);
     assert(_m4s_filename.size() != 0);
@@ -110,6 +111,8 @@ void m4s2mp4::InitFile()
     fflush(file);
     free((void *)ptr);
     InitFlag = true;
+    fprintf(stderr , "InitFile Done\n");
+
 }
 
 void m4s2mp4::GetM4sList()

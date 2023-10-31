@@ -12,6 +12,11 @@
 #include <atomic>
 #include <ctime>
 #include <chrono>
+#include <condition_variable>
+#include <mutex>
+
+#include "ExecTask.h"
+#include "UniFetch.h"
 
 // using namespace ParallelCtrl;
 
@@ -117,7 +122,9 @@ public:
             }
         }
     }
+    #if 0
     int SetFetchTask();
+    #endif
     void free_task()
     {
         // assert(this->_task != nullptr);
@@ -226,4 +233,26 @@ public:
     void GetM4sList();
     void InitFile(); // todo : 初始化file并且将数据插入
     // void TransCodeWrite();//TODO : ffmpeg 解码并写入文件
+};
+
+
+
+class UniFetch {
+
+    private:
+    LiveHomeStatus* Room;
+
+    private:
+    void m3u8init();
+    void m4sinit();
+
+
+    public :
+    std::mutex ConnMtx;//used to sync the 
+    std::condition_variable m4sTrigger;
+    
+    public:
+    /// @brief construct function  used to init m3u8fetch and m4s Downloader
+    /// @param LiveRoom 
+    UniFetch(LiveHomeStatus* LiveRoom);
 };

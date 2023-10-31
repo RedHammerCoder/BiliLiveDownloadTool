@@ -101,4 +101,6 @@ https://d1--cn-gotcha208.bilivideo.com/live-bvc/568137/live_322892_3999292_1500/
 
 
 
-## 
+## LiveHomeStatus 使用过的string
+- RoomName
+- RoomHostName

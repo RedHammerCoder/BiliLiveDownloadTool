@@ -244,6 +244,11 @@ void SymbleSplite::splitbychar(char _chr)
 }
 
 #endif
+
+
+
+# if 0
+
 /**
  * @brief 用于获取并解析m3u8文件
  *
@@ -251,7 +256,6 @@ void SymbleSplite::splitbychar(char _chr)
  */
 int m3u8fetch::SetFetchTask()
 {
-# if 0
     this->free_task();
     fprintf(stderr, "SetFetchTask\n");
     if (Url_m3u8.size() == 0)

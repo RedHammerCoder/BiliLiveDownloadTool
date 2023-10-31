@@ -28,7 +28,7 @@ void sigKill(int sig)
 int main(int argc, char **argv)
 {
     // signal(SIGKILL , sigKill);
-    signal(SIGINT, sigKill);
+    // signal(SIGINT, sigKill);
     fprintf(stderr, "PID %d", getpid());
     fprintf(stderr, "Despatch exec err %s\n", argv[0]);
 
