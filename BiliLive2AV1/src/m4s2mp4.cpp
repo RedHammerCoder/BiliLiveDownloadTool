@@ -18,16 +18,20 @@ void m4s2mp4::Start()
     fprintf(stderr, "#################------------- m4smp4 start\n");
     _task = [=]()
     {
-        fprintf(stderr, "###----m4s2mp4 Start\n");
-        fflush(stderr);
-        this->GetM4sList();
-        fprintf(stderr, "append msg start\n");
-        this->AppendMsgBlock();
-        fprintf(stderr, "-------##########---------########  append block to disk\n");
-        std::unique_lock<std::mutex> lk(this->LiveStatus->LivingRoomExt->ConnMtx);
-        fprintf(stderr, "m4s2mp4 will to wait \n");
-        this->LiveStatus->LivingRoomExt->m4sTrigger.wait(lk);
-        fprintf(stderr, "m4s2mp4 NOTIFYED \n");
+        while (true)
+        {
+            fprintf(stderr, "###----m4s2mp4 Start\n");
+            fflush(stderr);
+            this->GetM4sList();
+            fprintf(stderr, "append msg start\n");
+            this->AppendMsgBlock();
+            fprintf(stderr, "-------##########---------########  append block to disk\n");
+            std::unique_lock<std::mutex> XXX(this->LiveStatus->LivingRoomExt->ConnMtx);
+            fprintf(stderr, "m4s2mp4 will to wait \n");
+            // this->LiveStatus->LivingRoomExt->m4sTrigger.wait(XXX);
+sleep(6);
+            fprintf(stderr, "m4s2mp4 NOTIFYED \n");
+        }
     };
 
     if (InitFlag == false)

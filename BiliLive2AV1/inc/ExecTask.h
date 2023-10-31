@@ -22,17 +22,23 @@ public:
 public:
     ExecTask(Task &&t) : _task(t)
     {
+        RunningFlag = true;
         // _task(std::move(t));
     }
     ExecTask() {}
     void SetTask(Task &&t)
     {
-        _task=std::move(t);
+        RunningFlag = true;
+        _task = std::move(t);
     }
     void Start()
     {
         auto TaskPack = [=]()
         {
+            if (this->RunningFlag == false)
+            {
+                fprintf(stderr, "RunningFlag RunningDisabled\n");
+            }
             while (this->RunningFlag)
             {
                 fprintf(stderr, "thread Exec --------\n");
@@ -45,6 +51,7 @@ public:
     }
     ~ExecTask()
     {
+        fprintf(stderr, "ExecTask Deallocate \n");
         if (_thread.joinable())
         {
             RunningFlag = false;
